@@ -1,5 +1,8 @@
 var loginBrowser;
 var SpawnData;
+
+global.loggedin = false;
+
 setTimeout(function () {
     mp.gui.cursor.show(true, true);
     loginBrowser = mp.browsers.new("package://ui/auth.html");
@@ -99,6 +102,7 @@ mp.events.add("cef.spawn", (number) => {
     mp.game.ui.displayRadar(true);
     mp.gui.chat.activate(true);
     mp.events.callRemote("client.spawn")
+    global.loggedin = true;
 });
 
 mp.events.add("cef.createCharacter", (num) => {
