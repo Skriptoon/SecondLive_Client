@@ -53,6 +53,19 @@ body {
         font-weight: 700;
     }
 
+.client_hunger {
+    position: absolute;
+    left: 20%;
+    bottom: 1%;
+    background-color: rgba(41,41,41,0.75);
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.client_hunger img {
+    width: 4vh;
+}
+
 .grade {
     position: absolute;
     bottom: 20px;

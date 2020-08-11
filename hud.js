@@ -12,6 +12,8 @@ var lonline = 0;
 
 let currentHungerData = 100;
 
+var hudBrowser;
+
 
 const getMinimapAnchor = (mapState = 0) => {
     const graphics = mp.game.graphics;
@@ -55,8 +57,12 @@ mp.events.add('render', (nametags) => {
 
     if (mp.players.length != lonline) {
         lonline = mp.players.length;
+        var date = new Date();
 
-        //mainBrowser.emit('client.cef.updateOnline', lonline);
+
+        hudBrowser.execute('WaterMark.online = ' + lonline + ';\
+        HUD.time = ' + date.getHours() + ':' + date.getMinutes() + ';\
+        HUD.date = ' + date.getDate()  + '.' + date.getMonth() + '.' + date.getFullYear() + ';');
     }
 
     /*graphics.drawRect(hungerX, hungerY, minimapData.width, _height, 0, 0, 0, 150);
@@ -69,12 +75,12 @@ mp.events.add('render', (nametags) => {
         scale: [0.18, 0.18],
         outline: true
     });*/
-
+    
     /*nametags.forEach(nametag => {
         try {
-            let [player, x, y, distance] = nametag;
+            let [player, x, y, distance] = nametag;*/
 
-            player.setMaxHealth(player.getVariable('ADD_HP') || 200);
+            /*player.setMaxHealth(player.getVariable('ADD_HP') || 200);
 
             const isAimingToPlayer = mp.game.player.isFreeAimingAtEntity(player.handle);
 
@@ -158,8 +164,8 @@ mp.events.add('render', (nametags) => {
                         }
                     }
                 }
-            }
-        } catch(e) {
+            }*/
+       /* } catch(e) {
             graphics.notify(`${e.toString()}`);
         }
     });*/
@@ -266,10 +272,10 @@ mp.events.add('render', (nametags) => {
         }
 
         inVeh = false;
-    }
+    }*/
 
     // player's zone showing
-    if (global.showhud) {
+    /*if (global.showhud) {
         graphics.drawText(`~y~${thisInfo.realZoneName}`, [0.08, 0.76], {
             font: 4,
             color: [255, 255, 255, 200],
@@ -277,4 +283,4 @@ mp.events.add('render', (nametags) => {
             outline: true
         });
     }*/
-}, 'hud');
+});

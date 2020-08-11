@@ -78,9 +78,6 @@ const thisInfo = {
 
 const localPlayer = mp.players.local;
 
-
-var charBrowser;
-
 const characterCreatorCamera = mp.cameras.new('default', new mp.Vector3(402.8664, -996.4108, -99.00027), new mp.Vector3(0, 0, 0), 50);
 
 mp.events.add('characterCreator.client.init', (data) => {
@@ -129,7 +126,7 @@ mp.events.add('characterCreator.client.init', (data) => {
   updateAppearance();
   updateClothes();
 
-  charBrowser = mp.browsers.new("package://ui/character.html");
+  Browser.character = mp.browsers.new("package://ui/character.html");
   mp.gui.cursor.show(true, true);
 
   /*mp.game.streaming.requestAnimDict('amb@world_human_guard_patrol@male@base');
@@ -561,7 +558,7 @@ mp.events.add('characterCreator.client.submit.response', (positionStr, isChangin
   //global.menuClose();
 
   //setTimeout(() => mainBrowser.emit('interface.route.main'), 0);
-  charBrowser.destroy();
+  Browser.character.destroy();
   mp.gui.cursor.show(false, false);
   localPlayer.freezePosition(false);
   //localPlayer.stopAnim("amb@world_human_guard_patrol@male@base", "base", 0.0);
