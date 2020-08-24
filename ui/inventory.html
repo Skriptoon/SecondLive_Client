@@ -20,7 +20,7 @@
             background-color: darkgray;
         }
         .obj {
-            height: 30px;
+            height: 60px;
             width: 60px;
             background-color: rgba(39, 39, 39, 0.658);
         }
@@ -86,16 +86,27 @@
             as
         </div>
         <script>
+            var cell;
             $( ".obj" ).draggable();
 $( ".cell-body" ).droppable({
   drop: function( event, ui ) {
 var drag_coords = $(ui.draggable).offset();
 var drop_coords = $(this).offset();
 
+if(cell) return;
+
+setTimeout(() => {
+cell = false;
+}, 10)
+
 if((drop_coords.top < drag_coords.top && drag_coords.top < (drop_coords.top + 30))
 && (drop_coords.left < drag_coords.left && drag_coords.left < (drop_coords.left + 30))) {
 if((drop_coords.top + 30 - drag_coords.top) * (drop_coords.left + 30 - drag_coords.left) / (30*30) > 0.35) {
 $(ui.draggable).offset($(this).offset());
+console.log($(this).offset());
+$(this).css("background", "red")
+cell = true;
+return;
 }
 }
 
@@ -103,6 +114,9 @@ if((drop_coords.top < drag_coords.top && drag_coords.top < (drop_coords.top + 30
 && (drop_coords.left > drag_coords.left)) {
 if((drop_coords.top + 30 - drag_coords.top) * 30 / (30*30) > 0.5) {
 $(ui.draggable).offset($(this).offset());
+$(this).css("background", "red")
+cell = true;
+return;
 }
 }
 
@@ -110,6 +124,9 @@ if((drop_coords.top > drag_coords.top)
 && (drop_coords.left < drag_coords.left && drag_coords.left < (drop_coords.left + 30))) {
 if((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * (drop_coords.left + 30 - drag_coords.left) / (30*30) > 0.5) {
 $(ui.draggable).offset($(this).offset());
+$(this).css("background", "red")
+cell = true;
+return;
 }
 }
 
@@ -117,6 +134,9 @@ if((drop_coords.top > drag_coords.top)
 && (drop_coords.left > drag_coords.left)) {
 if((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * 30 / (30*30) > 0.35) {
 $(ui.draggable).offset($(this).offset());
+$(this).css("background", "red")
+cell = true;
+return;
 }
 }
 },
