@@ -93,14 +93,21 @@ function push_cell(drag, drop) {
     $(drag).offset($(drop).offset());
     for(var i = 0; i < $(drag).attr("data-size-x"); i++) {
       for(var k = 0; k < $(drag).attr("data-size-y"); k++) {
+        
         cells[Number($(drop).attr("id")) + i + k * size_x].active = true;
         items[Number($(drag).attr("id").substr(5))].cell = Number($(drop).attr("id"));
       }
     }
     cell = true;
   }
-  else
-  $(drag).offset(pos);
+  else {
+    $(drag).offset($("#" + items[Number($(drag).attr("id").substr(5))].cell).offset());
+    for(var i = 0; i < $(drag).attr("data-size-x"); i++) {
+      for(var k = 0; k < $(drag).attr("data-size-y"); k++) {
+        cells[items[Number($(drag).attr("id").substr(5))].cell + i + k * size_x].active = true;
+      }
+    }
+  }
 }
 
 function check_cells(id, drop) {
@@ -122,11 +129,10 @@ function add_item(x, y, cell) {
     .css("height", y * 30 + y - 1)
     .draggable({
     start: function( event, ui ) {
-      pos = $(this).offset();
+      //pos = $(this).offset();
       for(var i = 0; i < $(this).attr("data-size-x"); i++) {
         for(var k = 0; k < $(this).attr("data-size-y"); k++) {
           cells[items[Number($(this).attr("id").substr(5))].cell + i + k * size_x].active = false;
-          console.log(Number($(this).attr("id").substr(5)));
         }
       }
     }
