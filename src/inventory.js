@@ -164,7 +164,7 @@ function get_freecell(x, y) {
       if(!free)
         break
     }
-    if(x + freecell % size_x > size_x || freecell + y * size_x > size_x * size_y)
+    if(x + freecell % size_x > size_x || freecell + (y - 1) * size_x > size_x * size_y)
       continue;
     if(free)
       return freecell;
