@@ -38,8 +38,6 @@ for (var i = 0; i < size_y; i++) {
   body += '</tr>';
 }
 $("#root").append(body);
-//$("#root").append('<div class="obj" data-size-x="3" data-size-y="2">');
-//$("#root").append('<div class="obj" data-size-x="3" data-size-y="2">');
 
 var cell;
 var pos;
@@ -52,7 +50,7 @@ $(".cell-body").droppable({
 
     setTimeout(function () {
       cell = false;
-    }, 10);
+    }, 100);
 
     if (drop_coords.top < drag_coords.top && drag_coords.top < drop_coords.top + 30 && drop_coords.left < drag_coords.left && drag_coords.left < drop_coords.left + 30) {
       if ((drop_coords.top + 30 - drag_coords.top) * (drop_coords.left + 30 - drag_coords.left) / (30 * 30) > 0.35) {
@@ -108,7 +106,7 @@ function push_cell(drag, drop) {
 }
 
 function check_cells(id, drop) {
-  if (Number($(drop).attr("data-size-x")) + Number(id) % size_x > size_x || Number(id) + Number($(drop).attr("data-size-y")) * size_x > size_x * size_y) return false;
+  if (Number($(drop).attr("data-size-x")) + Number(id) % size_x > size_x || Number(id) + ($(drop).attr("data-size-y") - 1) * size_x > size_x * size_y) return false;
   for (var i = 0; i < $(drop).attr("data-size-x"); i++) {
     for (var k = 0; k < $(drop).attr("data-size-y"); k++) {
       if (cells[Number(id) + i + k * size_x].active) return false;
@@ -117,8 +115,13 @@ function check_cells(id, drop) {
   return true;
 }
 
-function add_item(x, y, cell) {
+function add_item(x, y) {
   $("#root").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"></div>');
+  var szcell = get_freecell(x, y);
+  if (szcell == -1) {
+    alert("Нет места");
+    return;
+  }
   $("#item-" + item).css("width", x * 30 + x - 1).css("height", y * 30 + y - 1).draggable({
     start: function start(event, ui) {
       //pos = $(this).offset();
@@ -128,7 +131,30 @@ function add_item(x, y, cell) {
         }
       }
     }
-  }).offset($("#" + cell).offset());
-  items[item] = new Item(cell, x, y);
+  }).offset($("#" + szcell).offset());
+  for (var i = 0; i < x; i++) {
+    for (var k = 0; k < y; k++) {
+      cells[szcell + i + k * size_x].active = true;
+    }
+  }
+  items[item] = new Item(szcell, x, y);
   item++;
+}
+
+function get_freecell(x, y) {
+  var free = false;
+  for (var freecell = 0; freecell < size_x * size_y; freecell++) {
+    for (var i = 0; i < x; i++) {
+      for (var k = 0; k < y; k++) {
+        free = false;
+        if (freecell + i + k * size_x > size_x * size_y - 1) break;
+        if (cells[freecell + i + k * size_x].active) break;
+        free = true;
+      }
+      if (!free) break;
+    }
+    if (x + freecell % size_x > size_x || freecell + y * size_x > size_x * size_y) continue;
+    if (free) return freecell;
+  }
+  return -1;
 }
