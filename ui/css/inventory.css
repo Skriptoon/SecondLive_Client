@@ -1,0 +1,14 @@
+/*.inventory {
+
+}*/
+.cell {
+padding: 0;
+}
+.cell-body {
+    height: 30px;
+    width: 30px;
+    background-color: darkgray;
+}
+.obj {
+    background-color: rgba(39, 39, 39, 0.658);
+}
