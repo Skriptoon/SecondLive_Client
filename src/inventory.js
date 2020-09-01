@@ -1,7 +1,6 @@
 'use strict';
 
 const size_x = 5;
-<<<<<<< HEAD
 const size_y = 10;
 
 var item = 0;
@@ -21,9 +20,6 @@ class Item {
     this.y = y;
   }
 }
-=======
-const size_y = 5;
->>>>>>> 8ab39c5b34976983c72ae8c287baf15ed0f38615
 
 var body = '<div class="inventory">\
 <div class="head">\
@@ -31,7 +27,6 @@ var body = '<div class="inventory">\
 </div>\
 <div class="cells">\
     <table class="table-bordered">';
-<<<<<<< HEAD
 for(let i = 0; i < size_y; i++) {
   body += '<tr>';
   for(var k = 0; k < size_x; k++) {
@@ -56,19 +51,6 @@ $( ".cell-body" ).droppable({
         setTimeout(() => {
         cell = false;
         }, 10)
-=======
-for (var i = 0; i < size_x; i++) {
-  body += '<tr>';
-  for (var k = 0; k < size_y; k++) {
-    body += '<td class="cell"><div class="cell-body" id="' + (i * 5 + k) + '"></div></td>';
-  }
-  body += '</tr>';
-}
-
-$("#root").append(body);
-/*
-class Inventory extends React.Component {
->>>>>>> 8ab39c5b34976983c72ae8c287baf15ed0f38615
 
         if((drop_coords.top < drag_coords.top && drag_coords.top < (drop_coords.top + 30))
         && (drop_coords.left < drag_coords.left && drag_coords.left < (drop_coords.left + 30))) {
