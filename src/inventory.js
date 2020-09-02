@@ -21,21 +21,40 @@ class Item {
   }
 }
 
-var body = '<div class="inventory">\
-<div class="head">\
-    <h4>Инвентарь</h4>\
-</div>\
-<div class="cells">\
-    <table class="table-bordered">';
-for(let i = 0; i < size_y; i++) {
-  body += '<tr>';
-  for(var k = 0; k < size_x; k++) {
-    body += '<td class="cell"><div class="cell-body" id="' + (k + i * size_x) + '"></div></td>';
-    cells[k + i * size_x] = new Cells();
+class Inventory extends React.Component {
+  render() {
+    return(
+      <div className="inventory">
+      <div className="head">
+          <h4>Инвентарь</h4>
+      </div>
+        <div className="cells">
+          <table className="table-bordered">
+            <tbody>
+              {RenderCell(size_x, size_y)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
   }
-  body += '</tr>';
 }
-$("#root").append(body);
+
+function RenderCell(x, y) {
+  var elem = [];
+  var elem2 = [];
+  for(let i = 0; i < size_y; i++) {
+    elem2[i] = [];
+    for(var k = 0; k < size_x; k++) {
+      elem2[i][k] = <td className="cell" key={k + i * size_x}><div className="cell-body" id={k + i * size_x}></div></td>;
+      cells[k + i * size_x] = new Cells();
+    }
+    elem[i] = <tr key={i}>{elem2[i]}</tr>;
+  }
+  return elem;
+}
+
+ReactDOM.render(<Inventory />, document.querySelector("#inventory"));
 
 var cell;
 var pos;
@@ -49,10 +68,10 @@ $( ".cell-body" ).droppable({
         setTimeout(() => {
         cell = false;
         }, 100)
-
+        
         if((drop_coords.top < drag_coords.top && drag_coords.top < (drop_coords.top + 30))
         && (drop_coords.left < drag_coords.left && drag_coords.left < (drop_coords.left + 30))) {
-            if((drop_coords.top + 30 - drag_coords.top) * (drop_coords.left + 30 - drag_coords.left) / (30*30) > 0.35) {
+            if((drop_coords.top + 30 - drag_coords.top) * (drop_coords.left + 30 - drag_coords.left) / (30*30) > 0.3) {
               push_cell(ui.draggable, this);
               return;
             }
@@ -76,7 +95,7 @@ $( ".cell-body" ).droppable({
 
         if((drop_coords.top > drag_coords.top)
         && (drop_coords.left > drag_coords.left)) {
-            if((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * 30 / (30*30) > 0.35) {
+            if((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * 30 / (30*30) > 0.4) {
               push_cell(ui.draggable, this);
               return;
             }
@@ -121,15 +140,15 @@ function check_cells(id, drop) {
   return true;
 }
 
-function add_item(x, y) {
-  $("#root").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"></div>');
+function add_item(x, y, img) {
+  $("#root").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="' + img + '" width="100%"></div>');
   var szcell = get_freecell(x, y);
   if(szcell == -1) {
     alert("Нет места");
     return;
   }
-  $("#item-" + item).css("width", x * 30 + x - 1)
-    .css("height", y * 30 + y - 1)
+  $("#item-" + item).css("width", x * 64 + x - 1)
+    .css("height", y * 64 + y - 1)
     .draggable({
     start: function( event, ui ) {
       //pos = $(this).offset();

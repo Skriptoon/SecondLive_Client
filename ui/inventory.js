@@ -1,5 +1,11 @@
 'use strict';
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var size_x = 5;
@@ -23,21 +29,73 @@ var Item = function Item(cell, x, y) {
   this.y = y;
 };
 
-var body = '<div class="inventory">\
-<div class="head">\
-    <h4>Инвентарь</h4>\
-</div>\
-<div class="cells">\
-    <table class="table-bordered">';
-for (var i = 0; i < size_y; i++) {
-  body += '<tr>';
-  for (var k = 0; k < size_x; k++) {
-    body += '<td class="cell"><div class="cell-body" id="' + (k + i * size_x) + '"></div></td>';
-    cells[k + i * size_x] = new Cells();
+var Inventory = function (_React$Component) {
+  _inherits(Inventory, _React$Component);
+
+  function Inventory() {
+    _classCallCheck(this, Inventory);
+
+    return _possibleConstructorReturn(this, (Inventory.__proto__ || Object.getPrototypeOf(Inventory)).apply(this, arguments));
   }
-  body += '</tr>';
+
+  _createClass(Inventory, [{
+    key: "render",
+    value: function render() {
+      return React.createElement(
+        "div",
+        { className: "inventory" },
+        React.createElement(
+          "div",
+          { className: "head" },
+          React.createElement(
+            "h4",
+            null,
+            "\u0418\u043D\u0432\u0435\u043D\u0442\u0430\u0440\u044C"
+          )
+        ),
+        React.createElement(
+          "div",
+          { className: "cells" },
+          React.createElement(
+            "table",
+            { className: "table-bordered" },
+            React.createElement(
+              "tbody",
+              null,
+              RenderCell(size_x, size_y)
+            )
+          )
+        )
+      );
+    }
+  }]);
+
+  return Inventory;
+}(React.Component);
+
+function RenderCell(x, y) {
+  var elem = [];
+  var elem2 = [];
+  for (var i = 0; i < size_y; i++) {
+    elem2[i] = [];
+    for (var k = 0; k < size_x; k++) {
+      elem2[i][k] = React.createElement(
+        "td",
+        { className: "cell", key: k + i * size_x },
+        React.createElement("div", { className: "cell-body", id: k + i * size_x })
+      );
+      cells[k + i * size_x] = new Cells();
+    }
+    elem[i] = React.createElement(
+      "tr",
+      { key: i },
+      elem2[i]
+    );
+  }
+  return elem;
 }
-$("#root").append(body);
+
+ReactDOM.render(React.createElement(Inventory, null), document.querySelector("#inventory"));
 
 var cell;
 var pos;
@@ -53,7 +111,7 @@ $(".cell-body").droppable({
     }, 100);
 
     if (drop_coords.top < drag_coords.top && drag_coords.top < drop_coords.top + 30 && drop_coords.left < drag_coords.left && drag_coords.left < drop_coords.left + 30) {
-      if ((drop_coords.top + 30 - drag_coords.top) * (drop_coords.left + 30 - drag_coords.left) / (30 * 30) > 0.35) {
+      if ((drop_coords.top + 30 - drag_coords.top) * (drop_coords.left + 30 - drag_coords.left) / (30 * 30) > 0.3) {
         push_cell(ui.draggable, this);
         return;
       }
@@ -74,7 +132,7 @@ $(".cell-body").droppable({
     }
 
     if (drop_coords.top > drag_coords.top && drop_coords.left > drag_coords.left) {
-      if ((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * 30 / (30 * 30) > 0.35) {
+      if ((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * 30 / (30 * 30) > 0.4) {
         push_cell(ui.draggable, this);
         return;
       }
@@ -115,14 +173,14 @@ function check_cells(id, drop) {
   return true;
 }
 
-function add_item(x, y) {
-  $("#root").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"></div>');
+function add_item(x, y, img) {
+  $("#root").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="' + img + '" width="100%"></div>');
   var szcell = get_freecell(x, y);
   if (szcell == -1) {
     alert("Нет места");
     return;
   }
-  $("#item-" + item).css("width", x * 30 + x - 1).css("height", y * 30 + y - 1).draggable({
+  $("#item-" + item).css("width", x * 64 + x - 1).css("height", y * 64 + y - 1).draggable({
     start: function start(event, ui) {
       //pos = $(this).offset();
       for (var i = 0; i < $(this).attr("data-size-x"); i++) {
