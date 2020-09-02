@@ -26,13 +26,13 @@ class Inventory extends React.Component {
   render() {
     return(
       <div className="inventory row">
-        <div className="col-10">
-          <div className="row">
+        <div className="col-12">
+          <div className="row justify-content-center">
             <div className="equip col-auto">
               <div className="head">
                 <h4>Экипировка</h4>
               </div>
-              <table>
+              <table className="table-bordered">
                 <tbody>
                   <tr>
                     <td><div className="equip-cell" id="hat"></div></td>

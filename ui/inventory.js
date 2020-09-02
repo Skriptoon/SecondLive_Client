@@ -47,10 +47,10 @@ var Inventory = function (_React$Component) {
         { className: "inventory row" },
         React.createElement(
           "div",
-          { className: "col-10" },
+          { className: "col-12" },
           React.createElement(
             "div",
-            { className: "row" },
+            { className: "row justify-content-center" },
             React.createElement(
               "div",
               { className: "equip col-auto" },
@@ -65,7 +65,7 @@ var Inventory = function (_React$Component) {
               ),
               React.createElement(
                 "table",
-                null,
+                { className: "table-bordered" },
                 React.createElement(
                   "tbody",
                   null,
