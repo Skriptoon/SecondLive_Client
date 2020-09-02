@@ -5,10 +5,20 @@
 padding: 0;
 }
 .cell-body {
-    height: 64px;
-    width: 64px;
+    height: 30px;
+    width: 30px;
     background-color: darkgray;
 }
 .obj {
     background-color: rgba(39, 39, 39, 0.658);
+}
+
+.equip-cell {
+    height: 60px;
+    width: 60px;
+    background: grey;
+}
+
+.center {
+    margin: auto;
 }
