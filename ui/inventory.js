@@ -294,15 +294,10 @@ function check_cells(id, drop) {
   return true;
 }
 
-function add_item(x, y, img) {
-  var type = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : "item";
-
-  $("#root").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="' + img + '" width="100%"></div>');
+function add_item(x, y, type) {
+  $("#root").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="img/items/' + type + '.png" width="100%"></div>');
   var szcell = get_freecell(x, y);
-  if (szcell == -1) {
-    alert("Нет места");
-    return;
-  }
+  if (szcell == -1) {}
   $("#item-" + item).css("width", x * 30 + x - 1).css("height", y * 30 + y - 1).draggable({
     start: function start(event, ui) {
       //pos = $(this).offset();

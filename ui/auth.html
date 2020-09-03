@@ -104,7 +104,7 @@
         </div>
         <div class="row justify-content-center" id="pickchar">
             <div class="pick col-10">
-                <div class="row justify-content-center">
+                <div class="row">
                     <div class="col-4">
                         <div class="slot text-center" id="slot1">
                         </div>
@@ -122,7 +122,7 @@
         </div>
         <div class="row justify-content-center" id="spawn" style="display: none;">
             <div class="pick col-10">
-                <div class="row justify-content-center">
+                <div class="row">
                     <div class="col-3">
                         <div class="slot  text-center">
                             <h5>В месте выхода</h5>
@@ -160,7 +160,7 @@
         function pick_char(data) {
             $("body").css("background-image", 'url("auth/PickChar.webp")');
             $("#auth").css("display", "none");
-            $("#pickchar").css("display", "block")
+            $("#pickchar").css("display", "flex")
             
             data = JSON.parse(data);
             for(let i = 0; i < 3; i++) {
@@ -209,7 +209,7 @@
         function SpawnInfo(data) {
             $("#auth").css("display", "none");
             $("#pickchar").css("display", "none")
-            $("#spawn").css("display", "block")
+            $("#spawn").css("display", "flex")
 
         }
 

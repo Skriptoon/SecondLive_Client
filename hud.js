@@ -60,7 +60,7 @@ mp.events.add('render', (nametags) => {
         var date = new Date();
 
 
-        hudBrowser.execute('WaterMark.online = ' + lonline + ';\
+        Browser.hud.execute('WaterMark.online = ' + lonline + ';\
         HUD.time = ' + date.getHours() + ':' + date.getMinutes() + ';\
         HUD.date = ' + date.getDate()  + '.' + date.getMonth() + '.' + date.getFullYear() + ';');
     }
