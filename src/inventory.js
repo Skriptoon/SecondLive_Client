@@ -7,12 +7,6 @@ var item = 0;
 var items = [];
 var cells = [];
 
-class Cells {
-  constructor() {
-    this.active = false;
-  }
-}
-
 class Size {
   constructor(x, y) {
     this.x = x;
@@ -86,7 +80,7 @@ function RenderCell(x, y) {
     elem2[i] = [];
     for(var k = 0; k < size_x; k++) {
       elem2[i][k] = <td className="cell" key={k + i * size_x}><div className="cell-body" id={k + i * size_x}></div></td>;
-      cells[k + i * size_x] = new Cells();
+      cells[k + i * size_x] = false;
     }
     elem[i] = <tr key={i}>{elem2[i]}</tr>;
   }
@@ -177,24 +171,18 @@ function push_cell(drag, drop) {
     for(var i = 0; i < $(drag).attr("data-size-x"); i++) {
       for(var k = 0; k < $(drag).attr("data-size-y"); k++) {
         
-        cells[Number($(drop).attr("id")) + i + k * size_x].active = true;
+        cells[Number($(drop).attr("id")) + i + k * size_x] = true;
         items[Number($(drag).attr("id").substr(5))].Cell = Number($(drop).attr("id"));
       }
     }
     cell = true;
-    var data = {
-      items: null,
-      cells: null
-    };
-    data.items = items;
-    data.cells = cells;
     mp.trigger("client.inventory.update", JSON.stringify(items));
   }
   else {
     $(drag).offset($("#" + items[Number($(drag).attr("id").substr(5))].cell).offset());
     for(var i = 0; i < $(drag).attr("data-size-x"); i++) {
       for(var k = 0; k < $(drag).attr("data-size-y"); k++) {
-        cells[items[Number($(drag).attr("id").substr(5))].Cell + i + k * size_x].active = true;
+        cells[items[Number($(drag).attr("id").substr(5))].Cell + i + k * size_x] = true;
       }
     }
   }
@@ -206,7 +194,7 @@ function check_cells(id, drop) {
     return false;
   for(var i = 0; i < $(drop).attr("data-size-x"); i++) {
     for(var k = 0; k < $(drop).attr("data-size-y"); k++) {
-      if(cells[Number(id) + i + k * size_x].active)
+      if(cells[Number(id) + i + k * size_x])
         return false;
     }
   }
@@ -226,7 +214,7 @@ function add_item(x, y, type) {
       //pos = $(this).offset();
       for(var i = 0; i < $(this).attr("data-size-x"); i++) {
         for(var k = 0; k < $(this).attr("data-size-y"); k++) {
-          cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x].active = false;
+          cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
         }
       }
     },
@@ -235,7 +223,7 @@ function add_item(x, y, type) {
         $(this).offset($("#" + items[Number($(this).attr("id").substr(5))].cell).offset());
         for(var i = 0; i < $(this).attr("data-size-x"); i++) {
           for(var k = 0; k < $(this).attr("data-size-y"); k++) {
-            cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x].active = true;
+            cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
           }
         }
       }
@@ -244,7 +232,7 @@ function add_item(x, y, type) {
   .offset($("#" + szcell).offset());
   for(var i = 0; i < x; i++) {
     for(var k = 0; k < y; k++) {
-      cells[szcell + i + k * size_x].active = true;
+      cells[szcell + i + k * size_x] = true;
     }
   }
   items[item] = new Item(type, szcell, x, y);
@@ -258,7 +246,7 @@ function get_freecell(x, y) {
       for(var k = 0; k < y; k++) {
         free = false;
         if(freecell + i + k * size_x > size_x * size_y - 1) break;
-        if(cells[freecell + i + k * size_x].active)
+        if(cells[freecell + i + k * size_x])
           break;
         free = true;
       }

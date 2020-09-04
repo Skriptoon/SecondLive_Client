@@ -12,12 +12,11 @@ mp.keys.bind(0x49, true, () => {
     }
 });
 
-mp.events.add("add_item", (item) => {
+mp.events.add("client.additem", (item) => {
     item = JSON.parse(item);
     inv_browser.execute("add_item(2, 1, " + item.ID + ");");
 });
 
 mp.events.add("client.inventory.update", (items) => {
-    mp.gui.chat.push("!");
     mp.events.callRemote("server.inventory.update", items)
 })
