@@ -1,12 +1,11 @@
 var open_inv;
-var inv_browser;
 mp.keys.bind(0x49, true, () => {
-    if(open_inv) { 
-        inv_browser.destroy();
+    if(open_inv) {
+        Browser.index.execute("$('#inventory').css('display', 'none')");
         mp.gui.cursor.show(false, false);
         open_inv = false;
     } else {
-        inv_browser = mp.browsers.new("package://ui/index.html");
+        Browser.index.execute("$('#inventory').css('display', 'block')");
         mp.gui.cursor.show(true, true);
         open_inv = true;
     }
@@ -14,9 +13,9 @@ mp.keys.bind(0x49, true, () => {
 
 mp.events.add("client.additem", (item) => {
     item = JSON.parse(item);
-    inv_browser.execute("add_item(2, 1, " + item.ID + ");");
+    Browser.index.execute("add_item(" + item.Size.x + ", " + item.Size.y + ", " + item.ID + ");");
 });
 
-mp.events.add("client.inventory.update", (items) => {
-    mp.events.callRemote("server.inventory.update", items)
+mp.events.add("client.inventory.update", (items, cells) => {
+    mp.events.callRemote("server.inventory.update", items, cells)
 })

@@ -10,6 +10,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var size_x = 5;
 var size_y = 10;
+var size_cell = 60;
 
 var item = 0;
 var items = [];
@@ -160,12 +161,16 @@ var Inventory = function (_React$Component) {
                 )
               ),
               React.createElement(
-                "table",
-                { className: "table-bordered" },
+                "div",
+                { id: "cell" },
                 React.createElement(
-                  "tbody",
-                  null,
-                  RenderCell(size_x, size_y)
+                  "table",
+                  { className: "table-bordered" },
+                  React.createElement(
+                    "tbody",
+                    null,
+                    RenderCell(size_x, size_y)
+                  )
                 )
               )
             )
@@ -218,37 +223,37 @@ $(".cell-body").droppable({
     if ($(ui.draggable).attr("data-size-x") == 1 && $(ui.draggable).attr("data-size-x") == 1) {
       console.log();
       if (drop_coords.top == drag_coords.top) {
-        if ((drop_coords.left + 30 - drag_coords.left) * 30 / (30 * 30) > 0.5) push_cell(ui.draggable, this);
+        if ((drop_coords.left + size_cell - drag_coords.left) * size_cell / (size_cell * size_cell) > 0.5) push_cell(ui.draggable, this);
         return;
       }
       if (drop_coords.left == drag_coords.left) {
-        if ((drop_coords.top + 30 - drag_coords.top) * 30 / (30 * 30) > 0.5) push_cell(ui.draggable, this);
+        if ((drop_coords.top + size_cell - drag_coords.top) * size_cell / (size_cell * size_cell) > 0.5) push_cell(ui.draggable, this);
         return;
       }
     }
-    if (drop_coords.top < drag_coords.top && drag_coords.top < drop_coords.top + 30 && drop_coords.left < drag_coords.left && drag_coords.left < drop_coords.left + 30) {
-      if ((drop_coords.top + 30 - drag_coords.top) * (drop_coords.left + 30 - drag_coords.left) / (30 * 30) > 0.3) {
+    if (drop_coords.top < drag_coords.top && drag_coords.top < drop_coords.top + size_cell && drop_coords.left < drag_coords.left && drag_coords.left < drop_coords.left + size_cell) {
+      if ((drop_coords.top + size_cell - drag_coords.top) * (drop_coords.left + size_cell - drag_coords.left) / (size_cell * size_cell) > 0.3) {
         push_cell(ui.draggable, this);
         return;
       }
     }
 
-    if (drop_coords.top < drag_coords.top && drag_coords.top < drop_coords.top + 30 && drop_coords.left > drag_coords.left) {
-      if ((drop_coords.top + 30 - drag_coords.top) * 30 / (30 * 30) > 0.5) {
+    if (drop_coords.top < drag_coords.top && drag_coords.top < drop_coords.top + size_cell && drop_coords.left > drag_coords.left) {
+      if ((drop_coords.top + size_cell - drag_coords.top) * size_cell / (size_cell * size_cell) > 0.5) {
         push_cell(ui.draggable, this);
         return;
       }
     }
 
-    if (drop_coords.top > drag_coords.top && drop_coords.left < drag_coords.left && drag_coords.left < drop_coords.left + 30) {
-      if ((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * (drop_coords.left + 30 - drag_coords.left) / (30 * 30) > 0.5) {
+    if (drop_coords.top > drag_coords.top && drop_coords.left < drag_coords.left && drag_coords.left < drop_coords.left + size_cell) {
+      if ((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * (drop_coords.left + size_cell - drag_coords.left) / (size_cell * size_cell) > 0.5) {
         push_cell(ui.draggable, this);
         return;
       }
     }
 
     if (drop_coords.top > drag_coords.top && drop_coords.left > drag_coords.left) {
-      if ((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * 30 / (30 * 30) > 0.4) {
+      if ((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * size_cell / (size_cell * size_cell) > 0.4) {
         push_cell(ui.draggable, this);
         return;
       }
@@ -281,9 +286,9 @@ function push_cell(drag, drop) {
       }
     }
     cell = true;
-    mp.trigger("client.inventory.update", JSON.stringify(items));
+    //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   } else {
-    $(drag).offset($("#" + items[Number($(drag).attr("id").substr(5))].cell).offset());
+    $(drag).offset($("#" + items[Number($(drag).attr("id").substr(5))].Cell).offset());
     for (var i = 0; i < $(drag).attr("data-size-x"); i++) {
       for (var k = 0; k < $(drag).attr("data-size-y"); k++) {
         cells[items[Number($(drag).attr("id").substr(5))].Cell + i + k * size_x] = true;
@@ -303,10 +308,14 @@ function check_cells(id, drop) {
 }
 
 function add_item(x, y, type) {
-  $("#root").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="img/items/' + type + '.png" width="100%"></div>');
   var szcell = get_freecell(x, y);
-  if (szcell == -1) {}
-  $("#item-" + item).css("width", x * 30 + x - 1).css("height", y * 30 + y - 1).draggable({
+  console.log(szcell);
+  if (szcell == -1) {
+    return;
+  }
+  $("#cell").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="img/items/' + type + '.png" width="100%"></div>');
+
+  $("#item-" + item).css("width", x * size_cell + x - 1).css("height", y * size_cell + y - 1).draggable({
     start: function start(event, ui) {
       //pos = $(this).offset();
       for (var i = 0; i < $(this).attr("data-size-x"); i++) {
@@ -317,7 +326,7 @@ function add_item(x, y, type) {
     },
     stop: function stop(event, ui) {
       if (!cell) {
-        $(this).offset($("#" + items[Number($(this).attr("id").substr(5))].cell).offset());
+        $(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
         for (var i = 0; i < $(this).attr("data-size-x"); i++) {
           for (var k = 0; k < $(this).attr("data-size-y"); k++) {
             cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
@@ -332,6 +341,7 @@ function add_item(x, y, type) {
     }
   }
   items[item] = new Item(type, szcell, x, y);
+  //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   item++;
 }
 

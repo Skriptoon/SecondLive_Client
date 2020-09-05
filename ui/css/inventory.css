@@ -5,8 +5,8 @@
 padding: 0;
 }
 .cell-body {
-    height: 30px;
-    width: 30px;
+    height: 60px;
+    width: 60px;
     background-color: darkgray;
 }
 .obj {
@@ -21,4 +21,9 @@ padding: 0;
 
 .center {
     margin: auto;
+}
+
+#cell {
+    height: 80vh;
+    overflow-y: auto;
 }
