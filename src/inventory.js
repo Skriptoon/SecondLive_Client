@@ -67,6 +67,7 @@ class Inventory extends React.Component {
                   {RenderCell(size_x, size_y)}
                 </tbody>
               </table>
+              <div id="items"></div>
               </div>
             </div>
           </div>
@@ -93,7 +94,6 @@ function RenderCell(x, y) {
 ReactDOM.render(<Inventory />, document.querySelector("#inventory"));
 
 var cell;
-var pos;
 $( ".cell-body" ).droppable({
     drop: function( event, ui ) {
         var drag_coords = $(ui.draggable).offset();
@@ -170,7 +170,8 @@ $(".equip").droppable({
 
 function push_cell(drag, drop) {
   if(check_cells($(drop).attr("id"), drag)) {
-    $(drag).offset($(drop).offset());
+    $(drag).css("position", "relative")
+      .offset($(drop).offset());
     for(var i = 0; i < $(drag).attr("data-size-x"); i++) {
       for(var k = 0; k < $(drag).attr("data-size-y"); k++) {
         
@@ -182,7 +183,9 @@ function push_cell(drag, drop) {
     //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   }
   else {
-    $(drag).offset($("#" + items[Number($(drag).attr("id").substr(5))].Cell).offset());
+    
+    $(drag).css("position", "relative")
+      .offset($("#" + items[Number($(drag).attr("id").substr(5))].Cell).offset());
     for(var i = 0; i < $(drag).attr("data-size-x"); i++) {
       for(var k = 0; k < $(drag).attr("data-size-y"); k++) {
         cells[items[Number($(drag).attr("id").substr(5))].Cell + i + k * size_x] = true;
@@ -204,19 +207,30 @@ function check_cells(id, drop) {
   return true;
 }
 
+
 function add_item(x, y, type) {
   var szcell = get_freecell(x, y);
   console.log(szcell);
   if(szcell == -1) {
     return;
   }
-  $("#cell").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="img/items/' + type + '.png" width="100%"></div>');
-  
+  $("#items").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="img/items/' + type + '.png" width="100%"></div>');
+  /*$("#item-" + item).mousedown(function() {
+    console.log("dfsd");
+    $(this).css("position", "absolute");
+    $(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
+    $(this).css("position", "relative");
+  })*/
   $("#item-" + item).css("width", x * size_cell + x - 1)
     .css("height", y * size_cell + y - 1)
     .draggable({
     start: function( event, ui ) {
-      //pos = $(this).offset();
+      //var pos = $(this).offset();
+      
+      //$(this).css("position", "absolute");
+      //$(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());*/
+      console.log($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
+      
       for(var i = 0; i < $(this).attr("data-size-x"); i++) {
         for(var k = 0; k < $(this).attr("data-size-y"); k++) {
           cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
@@ -235,6 +249,7 @@ function add_item(x, y, type) {
     }
   })
   .offset($("#" + szcell).offset());
+
   for(var i = 0; i < x; i++) {
     for(var k = 0; k < y; k++) {
       cells[szcell + i + k * size_x] = true;
