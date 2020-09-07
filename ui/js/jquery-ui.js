@@ -4222,7 +4222,6 @@ var scrollParent = $.fn.scrollParent = function( includeHidden ) {
 			return overflowRegex.test( parent.css( "overflow" ) + parent.css( "overflow-y" ) +
 				parent.css( "overflow-x" ) );
 		} ).eq( 0 );
-
 	return position === "fixed" || !scrollParent.length ?
 		$( this[ 0 ].ownerDocument || document ) :
 		scrollParent;
@@ -9668,7 +9667,7 @@ $.widget( "ui.draggable", $.ui.mouse, {
 	},
 
 	_mouseStart: function( event ) {
-
+		//this.element[ 0 ].style.position = "absolute";
 		var o = this.options;
 
 		//Create and append the visible helper
@@ -9676,7 +9675,6 @@ $.widget( "ui.draggable", $.ui.mouse, {
 
 		this._addClass( this.helper, "ui-draggable-dragging" );
 		
-
 		//Cache the helper size
 		this._cacheHelperProportions();
 
@@ -9684,7 +9682,7 @@ $.widget( "ui.draggable", $.ui.mouse, {
 		if ( $.ui.ddmanager ) {
 			$.ui.ddmanager.current = this;
 		}
-
+		this.element[ 0 ].style.position = "relative";
 		/*
 		 * - Position generation -
 		 * This block generates everything position related - it's the core of draggables.
@@ -9694,14 +9692,14 @@ $.widget( "ui.draggable", $.ui.mouse, {
 		this._cacheMargins();
 
 		//Store the helper's css position
+		
 		this.cssPosition = this.helper.css( "position" );
 		this.scrollParent = this.helper.scrollParent( true );
+		
 		this.offsetParent = this.helper.offsetParent();
-		console.log(this.scrollParent.attr("id"));
 		this.hasFixedAncestor = this.helper.parents().filter( function() {
 				return $( this ).css( "position" ) === "fixed";
 			} ).length > 0;
-
 		//The element's absolute position on the page minus margins
 		this.positionAbs = this.element.offset();
 		this._refreshOffsets( event );
@@ -9722,6 +9720,7 @@ $.widget( "ui.draggable", $.ui.mouse, {
 			this._clear();
 			return false;
 		}
+		this.element[ 0 ].style.position = "absolute";
 
 		//Recache the helper size
 		this._cacheHelperProportions();
@@ -9730,7 +9729,7 @@ $.widget( "ui.draggable", $.ui.mouse, {
 		if ( $.ui.ddmanager && !o.dropBehaviour ) {
 			$.ui.ddmanager.prepareOffsets( this, event );
 		}
-
+		
 		// Execute the drag once - this causes the helper not to be visible before getting its
 		// correct position
 		this._mouseDrag( event, true );
@@ -9757,6 +9756,7 @@ $.widget( "ui.draggable", $.ui.mouse, {
 			left: event.pageX - this.offset.left,
 			top: event.pageY - this.offset.top
 		};
+		//this.element[ 0 ].style.position = "absolute";
 	},
 
 	_mouseDrag: function( event, noPropagation ) {
@@ -9765,7 +9765,7 @@ $.widget( "ui.draggable", $.ui.mouse, {
 		if ( this.hasFixedAncestor ) {
 			this.offset.parent = this._getParentOffset();
 		}
-
+		
 		//Compute the helpers position
 		this.position = this._generatePosition( event, true );
 		this.positionAbs = this._convertPositionTo( "absolute" );
@@ -9786,19 +9786,20 @@ $.widget( "ui.draggable", $.ui.mouse, {
 		if ( $.ui.ddmanager ) {
 			$.ui.ddmanager.drag( this, event );
 		}
-
+		//this.element[ 0 ].style.position = "absolute";
 		return false;
 	},
 
 	_mouseStop: function( event ) {
-
+		
 		//If we are using droppables, inform the manager about the drop
 		var that = this,
 			dropped = false;
 		if ( $.ui.ddmanager && !this.options.dropBehaviour ) {
 			dropped = $.ui.ddmanager.drop( this, event );
+			
 		}
-
+		//this.element[ 0 ].style.position = "relative";
 		//if a drop comes from outside (a sortable)
 		if ( this.dropped ) {
 			dropped = this.dropped;
@@ -9951,8 +9952,10 @@ $.widget( "ui.draggable", $.ui.mouse, {
 		// 2. The actual offset parent is a child of the scroll parent, and the scroll parent isn't
 		// the document, which means that the scroll is included in the initial calculation of the
 		// offset of the parent, and never recalculated upon drag
+		
 		if ( this.cssPosition === "absolute" && this.scrollParent[ 0 ] !== document &&
 				$.contains( this.scrollParent[ 0 ], this.offsetParent[ 0 ] ) ) {
+					console.log("fsd)");
 			po.left += this.scrollParent.scrollLeft();
 			po.top += this.scrollParent.scrollTop();
 		}
@@ -10128,7 +10131,8 @@ $.widget( "ui.draggable", $.ui.mouse, {
 			pageX = event.pageX,
 			pageY = event.pageY;
 		// Cache the scroll
-		if ( !scrollIsRootNode || !this.offset.scroll ) {
+		
+		if ( /*!scrollIsRootNode ||*/ !this.offset.scroll ) {
 			this.offset.scroll = {
 				top: this.scrollParent.scrollTop(),
 				left: this.scrollParent.scrollLeft()
@@ -15651,7 +15655,7 @@ var widgetsSortable = $.widget( "ui.sortable", $.ui.mouse, {
 	},
 
 	_mouseStop: function( event, noPropagation ) {
-
+		
 		if ( !event ) {
 			return;
 		}

@@ -171,12 +171,12 @@ var Inventory = function (_React$Component) {
                     null,
                     RenderCell(size_x, size_y)
                   )
-                ),
-                React.createElement("div", { id: "items" })
+                )
               )
             )
           )
-        )
+        ),
+        React.createElement("div", { id: "items" })
       );
     }
   }]);
@@ -277,8 +277,7 @@ $(".equip").droppable({
 
 function push_cell(drag, drop) {
   if (check_cells($(drop).attr("id"), drag)) {
-    $(drag) //.css("position", "relative")
-    .offset($(drop).offset());
+    $(drag).css("position", "relative").offset($(drop).offset());
     for (var i = 0; i < $(drag).attr("data-size-x"); i++) {
       for (var k = 0; k < $(drag).attr("data-size-y"); k++) {
 
@@ -317,41 +316,59 @@ function add_item(x, y, type) {
   }
   $("#items").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="img/items/' + type + '.png" width="100%"></div>');
   $("#item-" + item).mousedown(function () {
-    //$(this).css("position", "absolute");
+
     //var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
-    /*var pos = $(this).offset();
-    $(this).css("top", pos.top)
+    var pos = $(this).offset();
+    //$(this).css("position", "absolute");
+    /*$(this).css("top", pos.top)
       .css("left", pos.left - $(".cells").offset());*/
-
   });
-  $("#item-" + item).css("width", x * size_cell + x - 1).css("height", y * size_cell + y - 1).draggable({
-    start: function start(event, ui) {
-      //var pos = $(this).offset();
-      var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
+  $("#item-" + item).css("width", x * size_cell + x - 1).css("height", y * size_cell + y - 1)
+  /*.draggable({
+  start: function( event, ui ) {
+    //var pos = $(this).offset();
+    var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
+    /*-$(this).css("top", pos.top)
+    .css("left", pos.left);*/
+  //$(this).css("position", "absolute");
+  //$(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());*/
+  /* console.log($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
+   
+   for(var i = 0; i < $(this).attr("data-size-x"); i++) {
+     for(var k = 0; k < $(this).attr("data-size-y"); k++) {
+       cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
+     }
+   }
+  },
+  stop: function(event, ui) {
+   if(!cell) {
+     $(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
+     for(var i = 0; i < $(this).attr("data-size-x"); i++) {
+       for(var k = 0; k < $(this).attr("data-size-y"); k++) {
+         cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
+       }
+     }
+   }
+  }
+  })*/
 
-      /*-$(this).css("top", pos.top)
-        .css("left", pos.left);*/
-      //$(this).css("position", "absolute");
-      //$(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());*/
-      console.log($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
+  .offset($("#" + szcell).offset());
 
-      for (var i = 0; i < $(this).attr("data-size-x"); i++) {
-        for (var k = 0; k < $(this).attr("data-size-y"); k++) {
-          cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
-        }
-      }
-    },
-    stop: function stop(event, ui) {
-      if (!cell) {
-        $(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
-        for (var i = 0; i < $(this).attr("data-size-x"); i++) {
-          for (var k = 0; k < $(this).attr("data-size-y"); k++) {
-            cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
-          }
-        }
-      }
-    }
-  }).offset($("#" + szcell).offset());
+  Draggable.create("#item-" + item, {
+    bounds: $("#cell"),
+    edgeResistance: 0,
+    type: "x,y",
+    inertia: true,
+    autoScroll: true
+    /*snap:{
+    	x: function(endValue) {
+    		return (snap || liveSnap) ? Math.round(endValue / gridWidth) * gridWidth : endValue;
+    	},
+    	y: function(endValue) {
+    		return (snap || liveSnap) ? Math.round(endValue / gridHeight) * gridHeight : endValue;
+    	}
+    }*/
+  });
 
   for (var i = 0; i < x; i++) {
     for (var k = 0; k < y; k++) {
