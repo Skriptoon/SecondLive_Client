@@ -72,6 +72,7 @@ class Inventory extends React.Component {
             </div>
           </div>
         </div>
+        
       </div>
     )
   }
@@ -83,7 +84,7 @@ function RenderCell(x, y) {
   for(let i = 0; i < size_y; i++) {
     elem2[i] = [];
     for(var k = 0; k < size_x; k++) {
-      elem2[i][k] = <td className="cell" key={k + i * size_x}><div className="cell-body" id={k + i * size_x}></div></td>;
+      elem2[i][k] = <td className="cell" key={k + i * size_x}><div className="cell-body droppable" id={k + i * size_x}></div></td>;
       cells[k + i * size_x] = false;
     }
     elem[i] = <tr key={i}>{elem2[i]}</tr>;
@@ -168,9 +169,10 @@ $(".equip").droppable({
   }
 });
 
+
 function push_cell(drag, drop) {
   if(check_cells($(drop).attr("id"), drag)) {
-    $(drag).css("position", "relative")
+    $(drag)//.css("position", "relative")
       .offset($(drop).offset());
     for(var i = 0; i < $(drag).attr("data-size-x"); i++) {
       for(var k = 0; k < $(drag).attr("data-size-y"); k++) {
@@ -215,18 +217,23 @@ function add_item(x, y, type) {
     return;
   }
   $("#items").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="img/items/' + type + '.png" width="100%"></div>');
-  /*$("#item-" + item).mousedown(function() {
-    console.log("dfsd");
-    $(this).css("position", "absolute");
-    $(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
-    $(this).css("position", "relative");
-  })*/
+  $("#item-" + item).mousedown(function() {
+    //$(this).css("position", "absolute");
+    //var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
+    /*var pos = $(this).offset();
+    $(this).css("top", pos.top)
+      .css("left", pos.left - $(".cells").offset());*/
+      
+  })
   $("#item-" + item).css("width", x * size_cell + x - 1)
     .css("height", y * size_cell + y - 1)
     .draggable({
     start: function( event, ui ) {
       //var pos = $(this).offset();
-      
+      var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
+
+    /*-$(this).css("top", pos.top)
+      .css("left", pos.left);*/
       //$(this).css("position", "absolute");
       //$(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());*/
       console.log($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
@@ -248,6 +255,7 @@ function add_item(x, y, type) {
       }
     }
   })
+  
   .offset($("#" + szcell).offset());
 
   for(var i = 0; i < x; i++) {
