@@ -67,12 +67,12 @@ class Inventory extends React.Component {
                   {RenderCell(size_x, size_y)}
                 </tbody>
               </table>
-              
+              <div id="items"></div>
               </div>
             </div>
           </div>
         </div>
-        <div id="items"></div>
+        
       </div>
     )
   }
@@ -173,7 +173,7 @@ $(".equip").droppable({
 function push_cell(drag, drop) {
   if(check_cells($(drop).attr("id"), drag)) {
     $(drag).css("position", "relative")
-      .offset($(drop).offset());
+    .offset($(drop).offset());
     for(var i = 0; i < $(drag).attr("data-size-x"); i++) {
       for(var k = 0; k < $(drag).attr("data-size-y"); k++) {
         
@@ -187,7 +187,7 @@ function push_cell(drag, drop) {
   else {
     
     $(drag).css("position", "relative")
-      .offset($("#" + items[Number($(drag).attr("id").substr(5))].Cell).offset());
+    .offset($("#" + items[Number($(drag).attr("id").substr(5))].Cell).offset());
     for(var i = 0; i < $(drag).attr("data-size-x"); i++) {
       for(var k = 0; k < $(drag).attr("data-size-y"); k++) {
         cells[items[Number($(drag).attr("id").substr(5))].Cell + i + k * size_x] = true;
@@ -221,23 +221,28 @@ function add_item(x, y, type) {
     
     //var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
     var pos = $(this).offset();
-    //$(this).css("position", "absolute");
-    /*$(this).css("top", pos.top)
-      .css("left", pos.left - $(".cells").offset());*/
-      
+    $(this).css("position", "absolute");
+    $(this).css("top", pos.top)
+      .css("left", pos.left - $(".cells").offset());
+    
+    for(var i = 1; $("#item-" + (Number($(this).attr("id").substr(5)) + i)).length; i++) {
+      var offset = $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset();
+      offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+      $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset(offset);
+    }
   })
   $("#item-" + item).css("width", x * size_cell + x - 1)
     .css("height", y * size_cell + y - 1)
-    /*.draggable({
+    .draggable({
     start: function( event, ui ) {
       //var pos = $(this).offset();
-      var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
+      //var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
 
-    /*-$(this).css("top", pos.top)
+    /*$(this).css("top", pos.top)
       .css("left", pos.left);*/
       //$(this).css("position", "absolute");
       //$(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());*/
-     /* console.log($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
+     // console.log($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
       
       for(var i = 0; i < $(this).attr("data-size-x"); i++) {
         for(var k = 0; k < $(this).attr("data-size-y"); k++) {
@@ -246,36 +251,36 @@ function add_item(x, y, type) {
       }
     },
     stop: function(event, ui) {
+      for(var i = 1; $("#item-" + (Number($(this).attr("id").substr(5)) + i)).length; i++) {
+        var offset = $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset();
+        offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+        $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset(offset);
+      }
       if(!cell) {
-        $(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
+        $(this).css("position", "relative")
+          .offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
         for(var i = 0; i < $(this).attr("data-size-x"); i++) {
           for(var k = 0; k < $(this).attr("data-size-y"); k++) {
             cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
           }
         }
       }
-    }
-  })*/
-  
-
-  
+    },
+    scroll: false
+  })
   .offset($("#" + szcell).offset());
 
-  Draggable.create("#item-" + item, {
-    bounds: $("#cell"),
-		edgeResistance: 0,
-		type: "x,y",
-		inertia: true,
-    autoScroll: true,
-		/*snap:{
-			x: function(endValue) {
-				return (snap || liveSnap) ? Math.round(endValue / gridWidth) * gridWidth : endValue;
-			},
-			y: function(endValue) {
-				return (snap || liveSnap) ? Math.round(endValue / gridHeight) * gridHeight : endValue;
-			}
-		}*/
-	});
+  $("#item-" + item).mousemove(function(e) {
+    var pos = $("#cell").offset();
+
+    if(pos.top < e.pageY && e.pageY < pos.top + 20
+    && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
+    $("#cell").scrollTop($("#cell").scrollTop() - 5);
+
+    if(pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height()
+    && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
+    $("#cell").scrollTop($("#cell").scrollTop() + 5);
+  });
 
   for(var i = 0; i < x; i++) {
     for(var k = 0; k < y; k++) {

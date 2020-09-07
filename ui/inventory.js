@@ -171,12 +171,12 @@ var Inventory = function (_React$Component) {
                     null,
                     RenderCell(size_x, size_y)
                   )
-                )
+                ),
+                React.createElement("div", { id: "items" })
               )
             )
           )
-        ),
-        React.createElement("div", { id: "items" })
+        )
       );
     }
   }]);
@@ -319,55 +319,56 @@ function add_item(x, y, type) {
 
     //var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
     var pos = $(this).offset();
-    //$(this).css("position", "absolute");
-    /*$(this).css("top", pos.top)
-      .css("left", pos.left - $(".cells").offset());*/
+    $(this).css("position", "absolute");
+    $(this).css("top", pos.top).css("left", pos.left - $(".cells").offset());
+
+    for (var i = 1; $("#item-" + (Number($(this).attr("id").substr(5)) + i)).length; i++) {
+      var offset = $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset();
+      offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+      $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset(offset);
+    }
   });
-  $("#item-" + item).css("width", x * size_cell + x - 1).css("height", y * size_cell + y - 1)
-  /*.draggable({
-  start: function( event, ui ) {
-    //var pos = $(this).offset();
-    var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
-    /*-$(this).css("top", pos.top)
-    .css("left", pos.left);*/
-  //$(this).css("position", "absolute");
-  //$(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());*/
-  /* console.log($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
-   
-   for(var i = 0; i < $(this).attr("data-size-x"); i++) {
-     for(var k = 0; k < $(this).attr("data-size-y"); k++) {
-       cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
-     }
-   }
-  },
-  stop: function(event, ui) {
-   if(!cell) {
-     $(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
-     for(var i = 0; i < $(this).attr("data-size-x"); i++) {
-       for(var k = 0; k < $(this).attr("data-size-y"); k++) {
-         cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
-       }
-     }
-   }
-  }
-  })*/
+  $("#item-" + item).css("width", x * size_cell + x - 1).css("height", y * size_cell + y - 1).draggable({
+    start: function start(event, ui) {
+      //var pos = $(this).offset();
+      //var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
 
-  .offset($("#" + szcell).offset());
+      /*$(this).css("top", pos.top)
+        .css("left", pos.left);*/
+      //$(this).css("position", "absolute");
+      //$(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());*/
+      // console.log($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
 
-  Draggable.create("#item-" + item, {
-    bounds: $("#cell"),
-    edgeResistance: 0,
-    type: "x,y",
-    inertia: true,
-    autoScroll: true
-    /*snap:{
-    	x: function(endValue) {
-    		return (snap || liveSnap) ? Math.round(endValue / gridWidth) * gridWidth : endValue;
-    	},
-    	y: function(endValue) {
-    		return (snap || liveSnap) ? Math.round(endValue / gridHeight) * gridHeight : endValue;
-    	}
-    }*/
+      for (var i = 0; i < $(this).attr("data-size-x"); i++) {
+        for (var k = 0; k < $(this).attr("data-size-y"); k++) {
+          cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
+        }
+      }
+    },
+    stop: function stop(event, ui) {
+      for (var i = 1; $("#item-" + (Number($(this).attr("id").substr(5)) + i)).length; i++) {
+        var offset = $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset();
+        offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+        $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset(offset);
+      }
+      if (!cell) {
+        $(this).css("position", "relative").offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
+        for (var i = 0; i < $(this).attr("data-size-x"); i++) {
+          for (var k = 0; k < $(this).attr("data-size-y"); k++) {
+            cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
+          }
+        }
+      }
+    },
+    scroll: false
+  }).offset($("#" + szcell).offset());
+
+  $("#item-" + item).mousemove(function (e) {
+    var pos = $("#cell").offset();
+
+    if (pos.top < e.pageY && e.pageY < pos.top + 20 && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() - 5);
+
+    if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
   });
 
   for (var i = 0; i < x; i++) {
