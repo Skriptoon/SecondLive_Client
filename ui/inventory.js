@@ -52,7 +52,7 @@ var Inventory = function (_React$Component) {
     value: function render() {
       return React.createElement(
         "div",
-        { className: "inventory row" },
+        { className: "inventory row align-items-center" },
         React.createElement(
           "div",
           { className: "col-12" },
@@ -272,6 +272,8 @@ $(".equip").droppable({
     }, 100);
 
     cell = true;
+
+    mp.trigger("client.item.use", JSON.stringify(items[$(ui.draggable).attr("id").substr(5)]));
   }
 });
 
@@ -286,7 +288,7 @@ function push_cell(drag, drop) {
       }
     }
     cell = true;
-    //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+    mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   } else {
 
     $(drag).css("position", "relative").offset($("#" + items[Number($(drag).attr("id").substr(5))].Cell).offset());
@@ -309,18 +311,21 @@ function check_cells(id, drop) {
 }
 
 function add_item(x, y, type) {
-  var szcell = get_freecell(x, y);
-  console.log(szcell);
+  var szcell = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : -1;
+  var data = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : "";
+
+  szcell == -1 ? get_freecell(x, y) : szcell;
   if (szcell == -1) {
     return;
   }
   $("#items").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="img/items/' + type + '.png" width="100%"></div>');
+
   $("#item-" + item).mousedown(function () {
 
     //var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
     var pos = $(this).offset();
     $(this).css("position", "absolute");
-    $(this).css("top", pos.top).css("left", pos.left - $(".cells").offset());
+    $(this).offset(pos);
 
     for (var i = 1; $("#item-" + (Number($(this).attr("id").substr(5)) + i)).length; i++) {
       var offset = $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset();
@@ -328,6 +333,17 @@ function add_item(x, y, type) {
       $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset(offset);
     }
   });
+
+  $("#item-" + item).mouseup(function () {
+    if (!cell) {
+      var pos = $(this).offset();
+      pos.left -= 8.5;
+      console.log(pos);
+      $(this).css("position", "relative");
+      $(this).offset(pos);
+    }
+  });
+
   $("#item-" + item).css("width", x * size_cell + x - 1).css("height", y * size_cell + y - 1).draggable({
     start: function start(event, ui) {
       //var pos = $(this).offset();
@@ -376,8 +392,8 @@ function add_item(x, y, type) {
       cells[szcell + i + k * size_x] = true;
     }
   }
-  items[item] = new Item(type, szcell, x, y);
-  //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+  items[item] = new Item(type, szcell, x, y, 1, data);
+  mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   item++;
 }
 
@@ -397,4 +413,13 @@ function get_freecell(x, y) {
     if (free) return freecell;
   }
   return -1;
+}
+
+function OpenInventory() {
+  $('#inventory').css('display', 'block');
+  for (var i = 0; i < items.length; i++) {
+    if ($("#item-" + i).length) {
+      $("#item-" + i).offset($("#" + items[i].Cell).offset());
+    }
+  }
 }

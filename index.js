@@ -24,3 +24,15 @@ const Browser = {
 setTimeout(() => {
 Browser.index = mp.browsers.new("package://ui/index.html");
 }, 10);
+
+global.chat = false;
+
+mp.keys.bind(0x0D, true, () => {
+    if(global.chat == true)
+        global.chat = false;
+});
+
+mp.keys.bind(0x54, true, () => {
+    if(global.chat == false)
+        global.chat = true;
+})

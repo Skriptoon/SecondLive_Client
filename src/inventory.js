@@ -29,7 +29,7 @@ class Item {
 class Inventory extends React.Component {
   render() {
     return(
-      <div className="inventory row">
+      <div className="inventory row align-items-center">
         <div className="col-12">
           <div className="row justify-content-center">
             <div className="equip col-auto">
@@ -165,7 +165,7 @@ $(".equip").droppable({
 
     cell = true;
 
-
+    mp.trigger("client.item.use", JSON.stringify(items[$(ui.draggable).attr("id").substr(5)]));
   }
 });
 
@@ -182,7 +182,7 @@ function push_cell(drag, drop) {
       }
     }
     cell = true;
-    //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+    mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   }
   else {
     
@@ -210,27 +210,37 @@ function check_cells(id, drop) {
 }
 
 
-function add_item(x, y, type) {
-  var szcell = get_freecell(x, y);
-  console.log(szcell);
+function add_item(x, y, type, szcell = -1, data="") {
+  szcell == -1 ? get_freecell(x, y) : szcell;
   if(szcell == -1) {
     return;
   }
   $("#items").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="img/items/' + type + '.png" width="100%"></div>');
+
   $("#item-" + item).mousedown(function() {
     
     //var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
     var pos = $(this).offset();
     $(this).css("position", "absolute");
-    $(this).css("top", pos.top)
-      .css("left", pos.left - $(".cells").offset());
+    $(this).offset(pos);
     
     for(var i = 1; $("#item-" + (Number($(this).attr("id").substr(5)) + i)).length; i++) {
       var offset = $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset();
       offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
       $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset(offset);
     }
-  })
+  });
+
+  $("#item-" + item).mouseup(function() {
+    if(!cell) {
+      var pos = $(this).offset();
+      pos.left -= 8.5;
+      console.log(pos)
+      $(this).css("position", "relative");
+      $(this).offset(pos);
+    }
+  });
+
   $("#item-" + item).css("width", x * size_cell + x - 1)
     .css("height", y * size_cell + y - 1)
     .draggable({
@@ -287,8 +297,8 @@ function add_item(x, y, type) {
       cells[szcell + i + k * size_x] = true;
     }
   }
-  items[item] = new Item(type, szcell, x, y);
-  //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+  items[item] = new Item(type, szcell, x, y, 1, data);
+  mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   item++;
 }
 
@@ -312,4 +322,13 @@ function get_freecell(x, y) {
       return freecell;
   }
   return -1;
+}
+
+function OpenInventory() {
+  $('#inventory').css('display', 'block');
+  for(var i = 0; i < items.length; i++) {
+    if($("#item-" + i).length) {
+      $("#item-" + i).offset($("#" + items[i].Cell).offset());
+    }
+  }
 }
