@@ -38,8 +38,31 @@ var Item = function Item(id, cell, x, y) {
   this.IsActive = Active;
 };
 
-var Inventory = function (_React$Component) {
-  _inherits(Inventory, _React$Component);
+var ItemBlock = function (_React$Component) {
+  _inherits(ItemBlock, _React$Component);
+
+  function ItemBlock() {
+    _classCallCheck(this, ItemBlock);
+
+    return _possibleConstructorReturn(this, (ItemBlock.__proto__ || Object.getPrototypeOf(ItemBlock)).apply(this, arguments));
+  }
+
+  _createClass(ItemBlock, [{
+    key: "render",
+    value: function render() {
+      return React.createElement(
+        "div",
+        { id: "item-" },
+        React.createElement("img", { src: "img/items/.png", width: "100%" })
+      );
+    }
+  }]);
+
+  return ItemBlock;
+}(React.Component);
+
+var Inventory = function (_React$Component2) {
+  _inherits(Inventory, _React$Component2);
 
   function Inventory() {
     _classCallCheck(this, Inventory);
@@ -220,7 +243,7 @@ $(".cell-body").droppable({
       cell = false;
     }, 100);
 
-    if ($(ui.draggable).attr("data-size-x") == 1 && $(ui.draggable).attr("data-size-x") == 1) {
+    if (items[$(ui.draggable).attr("id").substr(5)].Size.x == 1 && items[$(ui.draggable).attr("id").substr(5)].Size.y == 1) {
       console.log();
       if (drop_coords.top == drag_coords.top) {
         if ((drop_coords.left + size_cell - drag_coords.left) * size_cell / (size_cell * size_cell) > 0.5) push_cell(ui.draggable, this);
@@ -273,37 +296,86 @@ $(".equip").droppable({
 
     cell = true;
 
-    mp.trigger("client.item.use", JSON.stringify(items[$(ui.draggable).attr("id").substr(5)]));
-  }
+    var itemID = $(ui.draggable).attr("id").substr(5);
+    $(ui.draggable).draggable("destroy").remove();
+    items[itemID].Cell = -2;
+
+    $("#leg").html("<div id='item-" + itemID + "'><img src='img/items/" + items[itemID].ID + ".png' width='100%'></div>");
+    $("#item-" + itemID).draggable({
+      start: function start(event, ui) {
+        $(this).addClass("obj").css("width", items[$(this).attr("id").substr(5)].Size.x * size_cell + items[$(this).attr("id").substr(5)].Size.x - 1).css("height", items[$(this).attr("id").substr(5)].Size.y * size_cell + items[$(this).attr("id").substr(5)].Size.x - 1);
+      }
+    }).mousedown(function () {
+
+      //var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
+      var pos = $(this).offset();
+      $(this).css("position", "absolute");
+      $(this).offset(pos);
+
+      /*for(var i = 1; $("#item-" + (Number($(this).attr("id").substr(5)) + i)).length; i++) {
+        var offset = $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset();
+        offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+        $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset(offset);
+      }*/
+    }).mouseup(function () {
+      if (!cell) {
+        var pos = $(this).offset();
+        pos.left -= 8.5;
+        console.log(pos);
+        $(this).css("position", "relative");
+        $(this).offset(pos);
+      }
+    }).mousemove(function (e) {
+      var pos = $("#cell").offset();
+
+      if (pos.top < e.pageY && e.pageY < pos.top + 20 && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() - 5);
+
+      if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
+    });
+
+    //mp.trigger("client.item.use", JSON.stringify(items[itemID]));
+  },
+  accept: ".dress"
 });
 
 function push_cell(drag, drop) {
   if (check_cells($(drop).attr("id"), drag)) {
+
+    if (items[Number($(drag).attr("id").substr(5))].Cell == -2) {
+      var itemID = $(drag).attr("id").substr(5);
+      $(drag).draggable("destroy").remove();
+      drag = CreateItem("#items", itemID, items[itemID].ID);
+      drag.css("width", items[itemID].Size.x * size_cell + items[itemID].Size.x - 1).css("height", items[itemID].Size.y * size_cell + items[itemID].Size.y - 1);
+    }
+
     $(drag).css("position", "relative").offset($(drop).offset());
-    for (var i = 0; i < $(drag).attr("data-size-x"); i++) {
-      for (var k = 0; k < $(drag).attr("data-size-y"); k++) {
+
+    for (var i = 0; i < items[Number($(drag).attr("id").substr(5))].Size.x; i++) {
+      for (var k = 0; k < items[Number($(drag).attr("id").substr(5))].Size.y; k++) {
 
         cells[Number($(drop).attr("id")) + i + k * size_x] = true;
         items[Number($(drag).attr("id").substr(5))].Cell = Number($(drop).attr("id"));
       }
     }
-    cell = true;
-    mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
-  } else {
 
+    cell = true;
+    //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+  } else {
     $(drag).css("position", "relative").offset($("#" + items[Number($(drag).attr("id").substr(5))].Cell).offset());
-    for (var i = 0; i < $(drag).attr("data-size-x"); i++) {
-      for (var k = 0; k < $(drag).attr("data-size-y"); k++) {
+
+    for (var i = 0; i < items[Number($(drag).attr("id").substr(5))].Size.x; i++) {
+      for (var k = 0; k < items[Number($(drag).attr("id").substr(5))].Size.y; k++) {
         cells[items[Number($(drag).attr("id").substr(5))].Cell + i + k * size_x] = true;
       }
     }
   }
 }
 
-function check_cells(id, drop) {
-  if (Number($(drop).attr("data-size-x")) + Number(id) % size_x > size_x || Number(id) + ($(drop).attr("data-size-y") - 1) * size_x > size_x * size_y) return false;
-  for (var i = 0; i < $(drop).attr("data-size-x"); i++) {
-    for (var k = 0; k < $(drop).attr("data-size-y"); k++) {
+function check_cells(id, drag) {
+  if (Number(items[Number($(drag).attr("id").substr(5))].Size.x) + Number(id) % size_x > size_x || Number(id) + (items[Number($(drag).attr("id").substr(5))].Size.y - 1) * size_x > size_x * size_y) return false;
+
+  for (var i = 0; i < items[Number($(drag).attr("id").substr(5))].Size.x; i++) {
+    for (var k = 0; k < items[Number($(drag).attr("id").substr(5))].Size.y; k++) {
       if (cells[Number(id) + i + k * size_x]) return false;
     }
   }
@@ -318,11 +390,25 @@ function add_item(x, y, type) {
   if (szcell == -1) {
     return;
   }
-  $("#items").append('<div class="obj" id="item-' + item + '" data-size-x="' + x + '" data-size-y="' + y + '"><img src="img/items/' + type + '.png" width="100%"></div>');
 
-  $("#item-" + item).mousedown(function () {
+  var szItem = CreateItem("#items", item, type);
+  szItem.css("width", x * size_cell + x - 1).css("height", y * size_cell + y - 1).offset($("#" + szcell).offset());
 
-    //var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
+  for (var i = 0; i < x; i++) {
+    for (var k = 0; k < y; k++) {
+      cells[szcell + i + k * size_x] = true;
+    }
+  }
+
+  items[item] = new Item(type, szcell, x, y, 1, data);
+  //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+  item++;
+}
+
+function CreateItem(dom, item, type) {
+  $(dom).append('<div class="obj" id="item-' + item + '""><img src="img/items/' + type + '.png" width="100%"></div>');
+  var itemDOM = $("#item-" + item);
+  itemDOM.mousedown(function () {
     var pos = $(this).offset();
     $(this).css("position", "absolute");
     $(this).offset(pos);
@@ -332,9 +418,7 @@ function add_item(x, y, type) {
       offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
       $("#item-" + (Number($(this).attr("id").substr(5)) + i)).offset(offset);
     }
-  });
-
-  $("#item-" + item).mouseup(function () {
+  }).mouseup(function () {
     if (!cell) {
       var pos = $(this).offset();
       pos.left -= 8.5;
@@ -342,21 +426,10 @@ function add_item(x, y, type) {
       $(this).css("position", "relative");
       $(this).offset(pos);
     }
-  });
-
-  $("#item-" + item).css("width", x * size_cell + x - 1).css("height", y * size_cell + y - 1).draggable({
+  }).draggable({
     start: function start(event, ui) {
-      //var pos = $(this).offset();
-      //var pos = $("#" + items[Number($(this).attr("id").substr(5))].Cell).offset();
-
-      /*$(this).css("top", pos.top)
-        .css("left", pos.left);*/
-      //$(this).css("position", "absolute");
-      //$(this).offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());*/
-      // console.log($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
-
-      for (var i = 0; i < $(this).attr("data-size-x"); i++) {
-        for (var k = 0; k < $(this).attr("data-size-y"); k++) {
+      for (var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
+        for (var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
           cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
         }
       }
@@ -369,17 +442,15 @@ function add_item(x, y, type) {
       }
       if (!cell) {
         $(this).css("position", "relative").offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
-        for (var i = 0; i < $(this).attr("data-size-x"); i++) {
-          for (var k = 0; k < $(this).attr("data-size-y"); k++) {
+        for (var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
+          for (var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
             cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
           }
         }
       }
     },
     scroll: false
-  }).offset($("#" + szcell).offset());
-
-  $("#item-" + item).mousemove(function (e) {
+  }).mousemove(function (e) {
     var pos = $("#cell").offset();
 
     if (pos.top < e.pageY && e.pageY < pos.top + 20 && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() - 5);
@@ -387,14 +458,7 @@ function add_item(x, y, type) {
     if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
   });
 
-  for (var i = 0; i < x; i++) {
-    for (var k = 0; k < y; k++) {
-      cells[szcell + i + k * size_x] = true;
-    }
-  }
-  items[item] = new Item(type, szcell, x, y, 1, data);
-  mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
-  item++;
+  return itemDOM;
 }
 
 function get_freecell(x, y) {
@@ -418,7 +482,7 @@ function get_freecell(x, y) {
 function OpenInventory() {
   $('#inventory').css('display', 'block');
   for (var i = 0; i < items.length; i++) {
-    if ($("#item-" + i).length) {
+    if ($("#item-" + i).length && items[i].Cell != -2) {
       $("#item-" + i).offset($("#" + items[i].Cell).offset());
     }
   }
