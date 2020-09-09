@@ -24,3 +24,7 @@ mp.events.add("client.inventory.update", (items, cells) => {
 mp.events.add("client.item.use", (item) => {
     mp.events.callRemote("server.item.use", item);
 });
+
+mp.events.add("server.item.use.respose", (response) =>{
+    Browser.index.execute("ItemUse(" + response + ")");
+});
