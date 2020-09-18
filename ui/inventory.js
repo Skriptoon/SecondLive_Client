@@ -103,12 +103,12 @@ var Inventory = function (_React$Component) {
                     React.createElement(
                       "td",
                       null,
-                      React.createElement("div", { className: "equip-cell", id: "top" })
+                      React.createElement("div", { className: "equip-cell", id: "-8" })
                     ),
                     React.createElement(
                       "td",
                       null,
-                      React.createElement("div", { className: "equip-cell", id: "leg" })
+                      React.createElement("div", { className: "equip-cell", id: "-4" })
                     )
                   ),
                   React.createElement(
@@ -117,7 +117,7 @@ var Inventory = function (_React$Component) {
                     React.createElement(
                       "td",
                       null,
-                      React.createElement("div", { className: "equip-cell", id: "shoes" })
+                      React.createElement("div", { className: "equip-cell", id: "-6" })
                     ),
                     React.createElement(
                       "td",
@@ -264,6 +264,7 @@ $(".cell-body").droppable({
 });
 
 var equipItem;
+var startdrag;
 
 $(".equip").droppable({
   drop: function drop(event, ui) {
@@ -277,17 +278,28 @@ $(".equip").droppable({
 
     equipItem = $(ui.draggable).attr("id").substr(5);
     mp.trigger("client.item.use", JSON.stringify(items[equipItem]));
-  }
-  //accept:".dress"
+  },
+  accept: ".dress"
 });
 
 function ItemUse(response) {
   var itemID = $("#item-" + equipItem);
   if (response) {
+    for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
+      if (equipItem == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
+        elem = true;
+        continue;
+      }
+      if (elem) {
+        var offset = $("#items > .obj:nth-child(" + i + ")").offset();
+        offset.top += size_cell * items[equipItem].Size.y + items[equipItem].Size.y - 1;
+        $("#items > .obj:nth-child(" + i + ")").offset(offset);
+      }
+    }
     $(itemID).draggable("destroy").remove();
     items[equipItem].Cell = -2;
 
-    $("#leg").html("<div id='item-" + equipItem + "'><img src='img/items/" + items[equipItem].ID + ".png' width='100%'></div>");
+    $("#" + items[equipItem].ID).html("<div id='item-" + equipItem + "'><img src='img/items/" + items[equipItem].ID + ".png' width='100%'></div>");
     $("#item-" + equipItem).draggable({
       start: function start(event, ui) {
         $(this).addClass("obj").css("width", items[$(this).attr("id").substr(5)].Size.x * size_cell + items[$(this).attr("id").substr(5)].Size.x - 1).css("height", items[$(this).attr("id").substr(5)].Size.y * size_cell + items[$(this).attr("id").substr(5)].Size.x - 1);
@@ -300,7 +312,6 @@ function ItemUse(response) {
       if (!cell) {
         var pos = $(this).offset();
         pos.left -= 8.5;
-        console.log(pos);
         $(this).css("position", "relative");
         $(this).offset(pos);
       }
@@ -320,6 +331,7 @@ function ItemUse(response) {
       }
     }
   }
+  mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
 }
 
 function push_cell(drag, drop) {
@@ -347,7 +359,7 @@ function push_cell(drag, drop) {
     }
 
     cell = true;
-    //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+    mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   } else {
     $(drag).css("position", "relative").offset($("#" + items[Number($(drag).attr("id").substr(5))].Cell).offset());
 
@@ -379,23 +391,54 @@ function add_item(x, y, type) {
     return;
   }
 
-  var szItem = CreateItem("#items", item, type);
-  szItem.css("width", x * size_cell + x - 1).css("height", y * size_cell + y - 1).offset($("#" + szcell).offset());
+  if (szcell == -2) {
+    $("#" + type).html("<div id='item-" + item + "'><img src='img/items/" + type + ".png' width='100%'></div>");
+    $("#item-" + item).draggable({
+      start: function start(event, ui) {
+        $(this).addClass("obj").css("width", x * size_cell + x - 1).css("height", y * size_cell + x - 1);
+      }
+    }).mousedown(function () {
+      var pos = $(this).offset();
+      $(this).css("position", "absolute");
+      $(this).offset(pos);
+    }).mouseup(function () {
+      if (!cell) {
+        var pos = $(this).offset();
+        pos.left -= 8.5;
+        $(this).css("position", "relative");
+        $(this).offset(pos);
+      }
+    }).mousemove(function (e) {
+      var pos = $("#cell").offset();
 
-  for (var i = 0; i < x; i++) {
-    for (var k = 0; k < y; k++) {
-      cells[szcell + i + k * size_x] = true;
+      if (pos.top < e.pageY && e.pageY < pos.top + 20 && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() - 5);
+
+      if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
+    });
+  } else {
+
+    var szItem = CreateItem("#items", item, type);
+    szItem.css("width", x * size_cell + x - 1).css("height", y * size_cell + y - 1).offset($("#" + szcell).offset());
+
+    for (var i = 0; i < x; i++) {
+      for (var k = 0; k < y; k++) {
+        cells[szcell + i + k * size_x] = true;
+      }
     }
   }
-
   items[item] = new Item(type, szcell, x, y, 1, data);
-  //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+  mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   item++;
 }
 
 function CreateItem(dom, item, type) {
   $(dom).append('<div class="obj" id="item-' + item + '""><img src="img/items/' + type + '.png" width="100%"></div>');
   var itemDOM = $("#item-" + item);
+
+  if (type < 0) {
+    itemDOM.addClass("dress");
+  }
+
   itemDOM.mousedown(function () {
     var pos = $(this).offset();
     $(this).css("position", "absolute");
@@ -419,6 +462,19 @@ function CreateItem(dom, item, type) {
       $(this).css("position", "relative");
       $(this).offset(pos);
     }
+    if (!startdrag) {
+      for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
+        if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
+          elem = true;
+          continue;
+        }
+        if (elem) {
+          var offset = $("#items > .obj:nth-child(" + i + ")").offset();
+          offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+          $("#items > .obj:nth-child(" + i + ")").offset(offset);
+        }
+      }
+    }
   }).draggable({
     start: function start(event, ui) {
       for (var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
@@ -426,6 +482,7 @@ function CreateItem(dom, item, type) {
           cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
         }
       }
+      startdrag = true;
     },
     stop: function stop(event, ui) {
       for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
@@ -447,6 +504,7 @@ function CreateItem(dom, item, type) {
           }
         }
       }
+      startdrag = false;
     },
     scroll: false
   }).mousemove(function (e) {
