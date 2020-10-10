@@ -219,9 +219,7 @@ $(".cell-body").droppable({
     setTimeout(function () {
       cell = false;
     }, 100);
-
     if (items[$(ui.draggable).attr("id").substr(5)].Size.x == 1 && items[$(ui.draggable).attr("id").substr(5)].Size.y == 1) {
-      console.log();
       if (drop_coords.top == drag_coords.top) {
         if ((drop_coords.left + size_cell - drag_coords.left) * size_cell / (size_cell * size_cell) > 0.5) push_cell(ui.draggable, this);
         return;
@@ -303,6 +301,13 @@ function ItemUse(response) {
     $("#item-" + equipItem).draggable({
       start: function start(event, ui) {
         $(this).addClass("obj").css("width", items[$(this).attr("id").substr(5)].Size.x * size_cell + items[$(this).attr("id").substr(5)].Size.x - 1).css("height", items[$(this).attr("id").substr(5)].Size.y * size_cell + items[$(this).attr("id").substr(5)].Size.x - 1);
+        startdrag = true;
+      },
+      stop: function stop(event, ui) {
+        if (!cell) {
+          $(this).css("position", "static").css("width", "100%").css("height", "100%").removeClass("obj");
+          startdrag = false;
+        }
       }
     }).mousedown(function () {
       var pos = $(this).offset();
@@ -311,7 +316,6 @@ function ItemUse(response) {
     }).mouseup(function () {
       if (!cell) {
         var pos = $(this).offset();
-        pos.left -= 8.5;
         $(this).css("position", "relative");
         $(this).offset(pos);
       }
@@ -322,15 +326,15 @@ function ItemUse(response) {
 
       if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
     });
-  } else {
-    itemID.css("position", "relative").offset($("#" + items[equipItem].Cell).offset());
-
-    for (var i = 0; i < items[equipItem].Size.x; i++) {
-      for (var k = 0; k < items[equipItem].Size.y; k++) {
+  } /*else {
+    itemID.css("position", "relative")
+    .offset($("#" + items[equipItem].Cell).offset());
+      for(var i = 0; i < items[equipItem].Size.x; i++) {
+      for(var k = 0; k < items[equipItem].Size.y; k++) {
         cells[items[equipItem].Cell + i + k * size_x] = true;
       }
     }
-  }
+    }*/
   mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
 }
 
@@ -357,7 +361,6 @@ function push_cell(drag, drop) {
         items[Number($(drag).attr("id").substr(5))].Cell = Number($(drop).attr("id"));
       }
     }
-
     cell = true;
     mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   } else {
@@ -404,7 +407,6 @@ function add_item(x, y, type) {
     }).mouseup(function () {
       if (!cell) {
         var pos = $(this).offset();
-        pos.left -= 8.5;
         $(this).css("position", "relative");
         $(this).offset(pos);
       }
@@ -458,7 +460,6 @@ function CreateItem(dom, item, type) {
   }).mouseup(function () {
     if (!cell) {
       var pos = $(this).offset();
-      pos.left -= 8.5;
       $(this).css("position", "relative");
       $(this).offset(pos);
     }
@@ -491,6 +492,7 @@ function CreateItem(dom, item, type) {
           continue;
         }
         if (elem) {
+          console.log($("#items > .obj:nth-child(" + i + ")").attr("id"));
           var offset = $("#items > .obj:nth-child(" + i + ")").offset();
           offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
           $("#items > .obj:nth-child(" + i + ")").offset(offset);

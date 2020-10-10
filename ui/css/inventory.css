@@ -27,8 +27,9 @@ padding: 0;
 }
 
 #cell {
-    height: 80vh;
-    overflow-y: auto;
+    max-height: 80vh;
+    overflow-x: hidden;
+    overflow-y: scroll;
 }
 
 #items {
