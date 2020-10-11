@@ -72,9 +72,38 @@ class Inventory extends React.Component {
             </div>
           </div>
         </div>
-        
+        <div className="menu"></div>
       </div>
     )
+  }
+}
+
+class Menu extends React.Component {
+  constructor(props) {
+    super(props)
+    
+  }
+   
+  render() {
+    this.style = {
+      position: "absolute",
+      top: this.props.y,
+      left: this.props.x
+    }
+    return (<ul style={this.style}>
+			<li>
+        Одеть
+			</li>   
+			<li>
+        Выбросить
+			</li>
+			<li>
+			</li>
+			<li>
+			</li>
+			<li>
+			</li>
+		</ul>)
   }
 }
 
@@ -353,7 +382,7 @@ function add_item(x, y, type, szcell = -1, data="") {
     }
   }
   items[item] = new Item(type, szcell, x, y, 1, data);
-  mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+  //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   item++;
 }
 
@@ -365,22 +394,41 @@ function CreateItem(dom, item, type){
     itemDOM.addClass("dress");
   }
 
-  itemDOM.mousedown(function() {
-    var pos = $(this).offset();
-    $(this).css("position", "absolute");
-    $(this).offset(pos);
-    
-    for(var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
-      if($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
-        elem = true;
-        continue;
-      }
-      if(elem) {
-        var offset = $("#items > .obj:nth-child(" + i + ")").offset();
-        offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
-        $("#items > .obj:nth-child(" + i + ")").offset(offset);
+  itemDOM.mousedown(function(e) {
+    if(e.button == 0) {
+      var pos = $(this).offset();
+      $(this).css("position", "absolute");
+      $(this).offset(pos);
+      
+      for(var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
+        if($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
+          elem = true;
+          continue;
+        }
+        if(elem) {
+          var offset = $("#items > .obj:nth-child(" + i + ")").offset();
+          offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+          $("#items > .obj:nth-child(" + i + ")").offset(offset);
+        }
       }
     }
+  })
+  .contextmenu(function(e) {
+    var x = 0; 
+    var y = 0;
+    var d = document;
+    var w = window;
+
+    if (d.attachEvent != null) { // Internet Explorer & Opera
+        x = w.e.clientX + (d.documentElement.scrollLeft ? d.documentElement.scrollLeft : d.body.scrollLeft);
+        y = w.e.clientY + (d.documentElement.scrollTop ? d.documentElement.scrollTop : d.body.scrollTop);
+    } else if (!d.attachEvent && d.addEventListener) { // Gecko
+        x = e.clientX + w.scrollX;
+        y = e.clientY + w.scrollY;
+    }
+
+    ReactDOM.render(<Menu x={x} y={y}/>, document.querySelector(".menu"))
+    return false;
   })
   .mouseup(function() {
     if(!cell) {
