@@ -90,18 +90,12 @@ class Menu extends React.Component {
       top: this.props.y,
       left: this.props.x
     }
-    return (<ul style={this.style}>
-			<li>
+    return (<ul className="list-group" style={this.style}>
+			<li className="list-group-item">
         Одеть
 			</li>   
-			<li>
+			<li className="list-group-item">
         Выбросить
-			</li>
-			<li>
-			</li>
-			<li>
-			</li>
-			<li>
 			</li>
 		</ul>)
   }
@@ -199,6 +193,10 @@ $(".equip").droppable({
     mp.trigger("client.item.use", JSON.stringify(items[equipItem]));
   },
   accept:".dress"
+});
+
+$(document).mousedown(function(){
+	ReactDOM.render(null, document.querySelector(".menu"))
 });
 
 function ItemUse(response) {

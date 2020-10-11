@@ -204,20 +204,17 @@ var Menu = function (_React$Component2) {
       };
       return React.createElement(
         "ul",
-        { style: this.style },
+        { className: "list-group", style: this.style },
         React.createElement(
           "li",
-          null,
+          { className: "list-group-item" },
           "\u041E\u0434\u0435\u0442\u044C"
         ),
         React.createElement(
           "li",
-          null,
+          { className: "list-group-item" },
           "\u0412\u044B\u0431\u0440\u043E\u0441\u0438\u0442\u044C"
-        ),
-        React.createElement("li", null),
-        React.createElement("li", null),
-        React.createElement("li", null)
+        )
       );
     }
   }]);
@@ -319,6 +316,10 @@ $(".equip").droppable({
     mp.trigger("client.item.use", JSON.stringify(items[equipItem]));
   },
   accept: ".dress"
+});
+
+$(document).mousedown(function () {
+  ReactDOM.render(null, document.querySelector(".menu"));
 });
 
 function ItemUse(response) {
