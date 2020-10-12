@@ -191,10 +191,18 @@ var Menu = function (_React$Component2) {
   function Menu(props) {
     _classCallCheck(this, Menu);
 
-    return _possibleConstructorReturn(this, (Menu.__proto__ || Object.getPrototypeOf(Menu)).call(this, props));
+    var _this2 = _possibleConstructorReturn(this, (Menu.__proto__ || Object.getPrototypeOf(Menu)).call(this, props));
+
+    _this2.DropItem = _this2.DropItem.bind(_this2);
+    return _this2;
   }
 
   _createClass(Menu, [{
+    key: "DropItem",
+    value: function DropItem() {
+      mp.trigger("client.item.act", 1, JSON.stringify(items[this.props.id.substr(5)]));
+    }
+  }, {
     key: "render",
     value: function render() {
       this.style = {
@@ -202,6 +210,7 @@ var Menu = function (_React$Component2) {
         top: this.props.y,
         left: this.props.x
       };
+
       return React.createElement(
         "ul",
         { className: "list-group", style: this.style },
@@ -212,7 +221,7 @@ var Menu = function (_React$Component2) {
         ),
         React.createElement(
           "li",
-          { className: "list-group-item" },
+          { className: "list-group-item", id: "con-menu", onClick: this.DropItem },
           "\u0412\u044B\u0431\u0440\u043E\u0441\u0438\u0442\u044C"
         )
       );
@@ -318,8 +327,8 @@ $(".equip").droppable({
   accept: ".dress"
 });
 
-$(document).mousedown(function () {
-  ReactDOM.render(null, document.querySelector(".menu"));
+$(document).mousedown(function (e) {
+  if ($(e.target).attr("id") != "con-menu") ReactDOM.render(null, document.querySelector(".menu"));
 });
 
 function ItemUse(response) {
@@ -404,7 +413,7 @@ function push_cell(drag, drop) {
       }
     }
     cell = true;
-    mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+    //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   } else {
     $(drag).css("position", "relative").offset($("#" + items[Number($(drag).attr("id").substr(5))].Cell).offset());
 
@@ -517,15 +526,15 @@ function CreateItem(dom, item, type) {
       y = e.clientY + w.scrollY;
     }
 
-    ReactDOM.render(React.createElement(Menu, { x: x, y: y }), document.querySelector(".menu"));
+    ReactDOM.render(React.createElement(Menu, { x: x, y: y, id: $(this).attr("id") }), document.querySelector(".menu"));
     return false;
-  }).mouseup(function () {
+  }).mouseup(function (e) {
     if (!cell) {
       var pos = $(this).offset();
       $(this).css("position", "relative");
       $(this).offset(pos);
     }
-    if (!startdrag) {
+    if (!startdrag && e.button == 0) {
       for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
         if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
           elem = true;
@@ -554,7 +563,6 @@ function CreateItem(dom, item, type) {
           continue;
         }
         if (elem) {
-          console.log($("#items > .obj:nth-child(" + i + ")").attr("id"));
           var offset = $("#items > .obj:nth-child(" + i + ")").offset();
           offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
           $("#items > .obj:nth-child(" + i + ")").offset(offset);

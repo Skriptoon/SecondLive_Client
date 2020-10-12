@@ -81,20 +81,25 @@ class Inventory extends React.Component {
 class Menu extends React.Component {
   constructor(props) {
     super(props)
-    
+    this.DropItem = this.DropItem.bind(this);
   }
-   
+
+  DropItem() {
+    mp.trigger("client.item.act", 1, JSON.stringify(items[this.props.id.substr(5)]));
+  }
+
   render() {
     this.style = {
       position: "absolute",
       top: this.props.y,
       left: this.props.x
     }
+
     return (<ul className="list-group" style={this.style}>
 			<li className="list-group-item">
         Одеть
 			</li>   
-			<li className="list-group-item">
+			<li className="list-group-item" id="con-menu" onClick={this.DropItem}>
         Выбросить
 			</li>
 		</ul>)
@@ -195,7 +200,8 @@ $(".equip").droppable({
   accept:".dress"
 });
 
-$(document).mousedown(function(){
+$(document).mousedown(function(e){
+  if($(e.target).attr("id") != "con-menu")
 	ReactDOM.render(null, document.querySelector(".menu"))
 });
 
@@ -299,7 +305,7 @@ function push_cell(drag, drop) {
       }
     }
     cell = true;
-    mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+    //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   }
   else {
     $(drag).css("position", "relative")
@@ -425,16 +431,16 @@ function CreateItem(dom, item, type){
         y = e.clientY + w.scrollY;
     }
 
-    ReactDOM.render(<Menu x={x} y={y}/>, document.querySelector(".menu"))
+    ReactDOM.render(<Menu x={x} y={y} id={$(this).attr("id")}/>, document.querySelector(".menu"))
     return false;
   })
-  .mouseup(function() {
+  .mouseup(function(e) {
     if(!cell) {
       var pos = $(this).offset();
       $(this).css("position", "relative");
       $(this).offset(pos)
     }
-    if(!startdrag) {
+    if(!startdrag && e.button == 0) {
       for(var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
         if($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
           elem = true;
@@ -464,7 +470,6 @@ function CreateItem(dom, item, type){
           continue;
         }
         if(elem) {
-          console.log($("#items > .obj:nth-child(" + i + ")").attr("id"));
           var offset = $("#items > .obj:nth-child(" + i + ")").offset();
           offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
           $("#items > .obj:nth-child(" + i + ")").offset(offset);

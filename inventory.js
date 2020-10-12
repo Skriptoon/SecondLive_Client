@@ -28,3 +28,7 @@ mp.events.add("client.item.use", (item) => {
 mp.events.add("server.item.use.respose", (response) =>{
     Browser.index.execute("ItemUse(" + response + ")");
 });
+
+mp.events.add("client.item.act", (act, item) => {
+    mp.events.callRemote("server.item.act", act, item);
+})
