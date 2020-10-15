@@ -85,7 +85,7 @@ class Menu extends React.Component {
   }
 
   DropItem() {
-    mp.trigger("client.item.act", 1, JSON.stringify(items[this.props.id.substr(5)]));
+    mp.trigger("client.item.act", 1, JSON.stringify(items[this.props.id]));
   }
 
   render() {
@@ -198,6 +198,13 @@ $(".equip").droppable({
     mp.trigger("client.item.use", JSON.stringify(items[equipItem]));
   },
   accept:".dress"
+});
+
+$(".inventory").droppable({
+  drop: function(event, ui) {
+    if(!cell)
+    mp.trigger("client.item.act", 1, JSON.stringify(items[ui.draggable.attr("id").substr(5)]));
+  }
 });
 
 $(document).mousedown(function(e){
@@ -431,7 +438,7 @@ function CreateItem(dom, item, type){
         y = e.clientY + w.scrollY;
     }
 
-    ReactDOM.render(<Menu x={x} y={y} id={$(this).attr("id")}/>, document.querySelector(".menu"))
+    ReactDOM.render(<Menu x={x} y={y} id={$(this).attr("id").substr(5)}/>, document.querySelector(".menu"))
     return false;
   })
   .mouseup(function(e) {
