@@ -14,7 +14,7 @@ mp.keys.bind(0x49, true, () => {
 
 mp.events.add("client.additem", (item) => {
     item = JSON.parse(item);
-    Browser.index.execute("add_item(" + item.Size.x + ", " + item.Size.y + ", " + item.ID + ", " + item.Cell + ", '" + item.Data + "');");
+    Browser.index.execute("add_item(" + item.Size.x + ", " + item.Size.y + ", " + item.ID + ", " + item.Count + ", " + item.Stack + ", " + item.Cell + ", '" + item.Data + "');");
 });
 
 mp.events.add("client.inventory.update", (items, cells) => {

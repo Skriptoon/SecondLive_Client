@@ -25,8 +25,9 @@ var Size = function Size(x, y) {
 
 var Item = function Item(id, cell, x, y) {
   var count = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 1;
-  var data = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : "";
-  var Active = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : false;
+  var stack = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 1;
+  var data = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : "";
+  var Active = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : false;
 
   _classCallCheck(this, Item);
 
@@ -34,6 +35,7 @@ var Item = function Item(id, cell, x, y) {
   this.Cell = cell;
   this.Size = new Size(x, y);
   this.Count = count;
+  this.Stack = stack;
   this.Data = data;
   this.IsActive = Active;
 };
@@ -48,6 +50,87 @@ var Inventory = function (_React$Component) {
   }
 
   _createClass(Inventory, [{
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      $(".cell-body").droppable({
+        drop: function drop(event, ui) {
+          var drag_coords = $(ui.draggable).offset();
+          var drop_coords = $(this).offset();
+
+          if (cell) return;
+
+          setTimeout(function () {
+            cell = false;
+          }, 100);
+          if (items[$(ui.draggable).attr("id").substr(5)].Size.x == 1 && items[$(ui.draggable).attr("id").substr(5)].Size.y == 1) {
+            if (drop_coords.top == drag_coords.top) {
+              if ((drop_coords.left + size_cell - drag_coords.left) * size_cell / (size_cell * size_cell) > 0.5) push_cell(ui.draggable, this);
+              return;
+            }
+            if (drop_coords.left == drag_coords.left) {
+              if ((drop_coords.top + size_cell - drag_coords.top) * size_cell / (size_cell * size_cell) > 0.5) push_cell(ui.draggable, this);
+              return;
+            }
+          }
+          if (drop_coords.top < drag_coords.top && drag_coords.top < drop_coords.top + size_cell && drop_coords.left < drag_coords.left && drag_coords.left < drop_coords.left + size_cell) {
+            if ((drop_coords.top + size_cell - drag_coords.top) * (drop_coords.left + size_cell - drag_coords.left) / (size_cell * size_cell) > 0.3) {
+              push_cell(ui.draggable, this);
+              return;
+            }
+          }
+
+          if (drop_coords.top < drag_coords.top && drag_coords.top < drop_coords.top + size_cell && drop_coords.left > drag_coords.left) {
+            if ((drop_coords.top + size_cell - drag_coords.top) * size_cell / (size_cell * size_cell) > 0.5) {
+              push_cell(ui.draggable, this);
+              return;
+            }
+          }
+
+          if (drop_coords.top > drag_coords.top && drop_coords.left < drag_coords.left && drag_coords.left < drop_coords.left + size_cell) {
+            if ((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * (drop_coords.left + size_cell - drag_coords.left) / (size_cell * size_cell) > 0.5) {
+              push_cell(ui.draggable, this);
+              return;
+            }
+          }
+
+          if (drop_coords.top > drag_coords.top && drop_coords.left > drag_coords.left) {
+            if ((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * size_cell / (size_cell * size_cell) > 0.4) {
+              push_cell(ui.draggable, this);
+              return;
+            }
+          }
+        },
+
+        tolerance: "touch"
+      });
+
+      $(".equip").droppable({
+        drop: function drop(event, ui) {
+          if (cell) return;
+
+          setTimeout(function () {
+            cell = false;
+          }, 100);
+
+          cell = true;
+
+          equipItem = $(ui.draggable).attr("id").substr(5);
+          mp.trigger("client.item.use", JSON.stringify(items[equipItem]));
+        },
+        accept: ".dress"
+      });
+
+      $(".inventory").droppable({
+        drop: function drop(event, ui) {
+          if (!cell) mp.trigger("client.item.act", 1, JSON.stringify(items[ui.draggable.attr("id").substr(5)]));
+        }
+      });
+
+      $(document).mousedown(function (e) {
+        if ($(e.target).attr("id") != "con-menu") ReactDOM.unmountComponentAtNode(document.querySelector(".menu"));
+      });
+    }
+  }, {
     key: "render",
     value: function render() {
       return React.createElement(
@@ -172,7 +255,11 @@ var Inventory = function (_React$Component) {
                     RenderCell(size_x, size_y)
                   )
                 ),
-                React.createElement("div", { id: "items" })
+                React.createElement(
+                  "div",
+                  { id: "items" },
+                  React.createElement(RenderItem, null)
+                )
               )
             )
           )
@@ -185,16 +272,157 @@ var Inventory = function (_React$Component) {
   return Inventory;
 }(React.Component);
 
-var Menu = function (_React$Component2) {
-  _inherits(Menu, _React$Component2);
+var RenderItem = function (_React$Component2) {
+  _inherits(RenderItem, _React$Component2);
+
+  function RenderItem() {
+    _classCallCheck(this, RenderItem);
+
+    return _possibleConstructorReturn(this, (RenderItem.__proto__ || Object.getPrototypeOf(RenderItem)).apply(this, arguments));
+  }
+
+  _createClass(RenderItem, [{
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      for (var i = 0; items[i] != undefined; i++) {
+        if (items[i] == null) continue;
+        var itemDOM = $("#item-" + i);
+
+        if (items[i].ID < 0) {
+          itemDOM.addClass("dress");
+        }
+
+        itemDOM.mousedown(function (e) {
+          if (e.button == 0) {
+            var pos = $(this).offset();
+            $(this).css("position", "absolute");
+            $(this).offset(pos);
+
+            for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
+              if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
+                elem = true;
+                continue;
+              }
+              if (elem) {
+                var offset = $("#items > .obj:nth-child(" + i + ")").offset();
+                offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+                $("#items > .obj:nth-child(" + i + ")").offset(offset);
+              }
+            }
+          }
+        }).contextmenu(function (e) {
+          var x = 0;
+          var y = 0;
+          var d = document;
+          var w = window;
+
+          if (d.attachEvent != null) {
+            // Internet Explorer & Opera
+            x = w.e.clientX + (d.documentElement.scrollLeft ? d.documentElement.scrollLeft : d.body.scrollLeft);
+            y = w.e.clientY + (d.documentElement.scrollTop ? d.documentElement.scrollTop : d.body.scrollTop);
+          } else if (!d.attachEvent && d.addEventListener) {
+            // Gecko
+            x = e.clientX + w.scrollX;
+            y = e.clientY + w.scrollY;
+          }
+
+          ReactDOM.render(React.createElement(Menu, { x: x, y: y, id: $(this).attr("id").substr(5) }), document.querySelector(".menu"));
+          return false;
+        }).mouseup(function (e) {
+          if (!cell) {
+            var pos = $(this).offset();
+            $(this).css("position", "relative");
+            $(this).offset(pos);
+          }
+          if (!startdrag && e.button == 0) {
+            for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
+              if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
+                elem = true;
+                continue;
+              }
+              if (elem) {
+                var offset = $("#items > .obj:nth-child(" + i + ")").offset();
+                offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+                $("#items > .obj:nth-child(" + i + ")").offset(offset);
+              }
+            }
+          }
+        }).draggable({
+          start: function start(event, ui) {
+            for (var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
+              for (var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
+                cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
+              }
+            }
+            startdrag = true;
+          },
+          stop: function stop(event, ui) {
+            for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
+              if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
+                elem = true;
+                continue;
+              }
+              if (elem) {
+                var offset = $("#items > .obj:nth-child(" + i + ")").offset();
+                offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+                $("#items > .obj:nth-child(" + i + ")").offset(offset);
+              }
+            }
+            if (!cell) {
+              $(this).css("position", "relative").offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
+              for (var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
+                for (var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
+                  cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
+                }
+              }
+            }
+            startdrag = false;
+          },
+          scroll: false
+        }).mousemove(function (e) {
+          var pos = $("#cell").offset();
+
+          if (pos.top < e.pageY && e.pageY < pos.top + 20 && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() - 5);
+
+          if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
+        }).css("position", "relative").offset($("#" + items[i].Cell).offset());
+      }
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var elem = [];
+      for (var i = 0; items[i] != undefined; i++) {
+        if (items[i] == null) continue;
+
+        var style = {
+          width: items[i].Size.y * size_cell + items[i].Size.y - 1,
+          height: items[i].Size.x * size_cell + items[i].Size.x - 1
+        };
+        elem[i] = React.createElement(
+          "div",
+          { key: i, className: "obj", id: "item-" + i, style: style },
+          React.createElement("img", { src: 'img/items/' + items[i].ID + '.png', width: "100%" })
+        );
+      }
+
+      return elem;
+    }
+  }]);
+
+  return RenderItem;
+}(React.Component);
+
+var Menu = function (_React$Component3) {
+  _inherits(Menu, _React$Component3);
 
   function Menu(props) {
     _classCallCheck(this, Menu);
 
-    var _this2 = _possibleConstructorReturn(this, (Menu.__proto__ || Object.getPrototypeOf(Menu)).call(this, props));
+    var _this3 = _possibleConstructorReturn(this, (Menu.__proto__ || Object.getPrototypeOf(Menu)).call(this, props));
 
-    _this2.DropItem = _this2.DropItem.bind(_this2);
-    return _this2;
+    _this3.DropItem = _this3.DropItem.bind(_this3);
+    return _this3;
   }
 
   _createClass(Menu, [{
@@ -253,89 +481,11 @@ function RenderCell(x, y) {
   return elem;
 }
 
-ReactDOM.render(React.createElement(Inventory, null), document.querySelector("#inventory"));
+//ReactDOM.render(<Inventory />, document.querySelector("#inventory"));
 
 var cell;
-$(".cell-body").droppable({
-  drop: function drop(event, ui) {
-    var drag_coords = $(ui.draggable).offset();
-    var drop_coords = $(this).offset();
-
-    if (cell) return;
-
-    setTimeout(function () {
-      cell = false;
-    }, 100);
-    if (items[$(ui.draggable).attr("id").substr(5)].Size.x == 1 && items[$(ui.draggable).attr("id").substr(5)].Size.y == 1) {
-      if (drop_coords.top == drag_coords.top) {
-        if ((drop_coords.left + size_cell - drag_coords.left) * size_cell / (size_cell * size_cell) > 0.5) push_cell(ui.draggable, this);
-        return;
-      }
-      if (drop_coords.left == drag_coords.left) {
-        if ((drop_coords.top + size_cell - drag_coords.top) * size_cell / (size_cell * size_cell) > 0.5) push_cell(ui.draggable, this);
-        return;
-      }
-    }
-    if (drop_coords.top < drag_coords.top && drag_coords.top < drop_coords.top + size_cell && drop_coords.left < drag_coords.left && drag_coords.left < drop_coords.left + size_cell) {
-      if ((drop_coords.top + size_cell - drag_coords.top) * (drop_coords.left + size_cell - drag_coords.left) / (size_cell * size_cell) > 0.3) {
-        push_cell(ui.draggable, this);
-        return;
-      }
-    }
-
-    if (drop_coords.top < drag_coords.top && drag_coords.top < drop_coords.top + size_cell && drop_coords.left > drag_coords.left) {
-      if ((drop_coords.top + size_cell - drag_coords.top) * size_cell / (size_cell * size_cell) > 0.5) {
-        push_cell(ui.draggable, this);
-        return;
-      }
-    }
-
-    if (drop_coords.top > drag_coords.top && drop_coords.left < drag_coords.left && drag_coords.left < drop_coords.left + size_cell) {
-      if ((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * (drop_coords.left + size_cell - drag_coords.left) / (size_cell * size_cell) > 0.5) {
-        push_cell(ui.draggable, this);
-        return;
-      }
-    }
-
-    if (drop_coords.top > drag_coords.top && drop_coords.left > drag_coords.left) {
-      if ((drag_coords.top + $(ui.draggable).height() - drop_coords.top) * size_cell / (size_cell * size_cell) > 0.4) {
-        push_cell(ui.draggable, this);
-        return;
-      }
-    }
-  },
-
-  tolerance: "touch"
-});
-
 var equipItem;
 var startdrag;
-
-$(".equip").droppable({
-  drop: function drop(event, ui) {
-    if (cell) return;
-
-    setTimeout(function () {
-      cell = false;
-    }, 100);
-
-    cell = true;
-
-    equipItem = $(ui.draggable).attr("id").substr(5);
-    mp.trigger("client.item.use", JSON.stringify(items[equipItem]));
-  },
-  accept: ".dress"
-});
-
-$(".inventory").droppable({
-  drop: function drop(event, ui) {
-    if (!cell) mp.trigger("client.item.act", 1, JSON.stringify(items[ui.draggable.attr("id").substr(5)]));
-  }
-});
-
-$(document).mousedown(function (e) {
-  if ($(e.target).attr("id") != "con-menu") ReactDOM.render(null, document.querySelector(".menu"));
-});
 
 function ItemUse(response) {
   var itemID = $("#item-" + equipItem);
@@ -442,9 +592,9 @@ function check_cells(id, drag) {
   return true;
 }
 
-function add_item(x, y, type) {
-  var szcell = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : -1;
-  var data = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : "";
+function add_item(x, y, type, count, stack) {
+  var szcell = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : -1;
+  var data = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : "";
 
   szcell = szcell == -1 ? get_freecell(x, y) : szcell;
   if (szcell == -1) {
@@ -474,126 +624,29 @@ function add_item(x, y, type) {
 
       if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
     });
+
+    items[item] = new Item(type, szcell, x, y, count, stack, data);
+    item++;
   } else {
-
-    var szItem = CreateItem("#items", item, type);
-    szItem.css("width", x * size_cell + x - 1).css("height", y * size_cell + y - 1).offset($("#" + szcell).offset());
-
-    for (var i = 0; i < x; i++) {
-      for (var k = 0; k < y; k++) {
-        cells[szcell + i + k * size_x] = true;
+    var szId;
+    for (var i = 0; items[i] != undefined; i++) {
+      if (items[i].ID == type) szId = i;
+    }
+    if (szId >= 0 && stack >= count + items[szId].Count) {
+      items[szId].Count += count;
+    } else {
+      for (var i = 0; i < x; i++) {
+        for (var k = 0; k < y; k++) {
+          cells[szcell + i + k * size_x] = true;
+        }
       }
+
+      items[item] = new Item(type, szcell, x, y, count, stack, data);
+
+      item++;
     }
   }
-  items[item] = new Item(type, szcell, x, y, 1, data);
   //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
-  item++;
-}
-
-function CreateItem(dom, item, type) {
-  $(dom).append('<div class="obj" id="item-' + item + '""><img src="img/items/' + type + '.png" width="100%"></div>');
-  var itemDOM = $("#item-" + item);
-
-  if (type < 0) {
-    itemDOM.addClass("dress");
-  }
-
-  itemDOM.mousedown(function (e) {
-    if (e.button == 0) {
-      var pos = $(this).offset();
-      $(this).css("position", "absolute");
-      $(this).offset(pos);
-
-      for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
-        if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
-          elem = true;
-          continue;
-        }
-        if (elem) {
-          var offset = $("#items > .obj:nth-child(" + i + ")").offset();
-          offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
-          $("#items > .obj:nth-child(" + i + ")").offset(offset);
-        }
-      }
-    }
-  }).contextmenu(function (e) {
-    var x = 0;
-    var y = 0;
-    var d = document;
-    var w = window;
-
-    if (d.attachEvent != null) {
-      // Internet Explorer & Opera
-      x = w.e.clientX + (d.documentElement.scrollLeft ? d.documentElement.scrollLeft : d.body.scrollLeft);
-      y = w.e.clientY + (d.documentElement.scrollTop ? d.documentElement.scrollTop : d.body.scrollTop);
-    } else if (!d.attachEvent && d.addEventListener) {
-      // Gecko
-      x = e.clientX + w.scrollX;
-      y = e.clientY + w.scrollY;
-    }
-
-    ReactDOM.render(React.createElement(Menu, { x: x, y: y, id: $(this).attr("id").substr(5) }), document.querySelector(".menu"));
-    return false;
-  }).mouseup(function (e) {
-    if (!cell) {
-      var pos = $(this).offset();
-      $(this).css("position", "relative");
-      $(this).offset(pos);
-    }
-    if (!startdrag && e.button == 0) {
-      for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
-        if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
-          elem = true;
-          continue;
-        }
-        if (elem) {
-          var offset = $("#items > .obj:nth-child(" + i + ")").offset();
-          offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
-          $("#items > .obj:nth-child(" + i + ")").offset(offset);
-        }
-      }
-    }
-  }).draggable({
-    start: function start(event, ui) {
-      for (var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
-        for (var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
-          cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
-        }
-      }
-      startdrag = true;
-    },
-    stop: function stop(event, ui) {
-      for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
-        if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
-          elem = true;
-          continue;
-        }
-        if (elem) {
-          var offset = $("#items > .obj:nth-child(" + i + ")").offset();
-          offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
-          $("#items > .obj:nth-child(" + i + ")").offset(offset);
-        }
-      }
-      if (!cell) {
-        $(this).css("position", "relative").offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
-        for (var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
-          for (var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
-            cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
-          }
-        }
-      }
-      startdrag = false;
-    },
-    scroll: false
-  }).mousemove(function (e) {
-    var pos = $("#cell").offset();
-
-    if (pos.top < e.pageY && e.pageY < pos.top + 20 && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() - 5);
-
-    if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
-  });
-
-  return itemDOM;
 }
 
 function get_freecell(x, y) {
