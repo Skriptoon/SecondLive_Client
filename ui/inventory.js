@@ -16,6 +16,8 @@ var item = 0;
 var items = [];
 var cells = [];
 
+var open = false;
+
 var Size = function Size(x, y) {
   _classCallCheck(this, Size);
 
@@ -59,9 +61,6 @@ var Inventory = function (_React$Component) {
 
           if (cell) return;
 
-          setTimeout(function () {
-            cell = false;
-          }, 100);
           if (items[$(ui.draggable).attr("id").substr(5)].Size.x == 1 && items[$(ui.draggable).attr("id").substr(5)].Size.y == 1) {
             if (drop_coords.top == drag_coords.top) {
               if ((drop_coords.left + size_cell - drag_coords.left) * size_cell / (size_cell * size_cell) > 0.5) push_cell(ui.draggable, this);
@@ -108,10 +107,6 @@ var Inventory = function (_React$Component) {
         drop: function drop(event, ui) {
           if (cell) return;
 
-          setTimeout(function () {
-            cell = false;
-          }, 100);
-
           cell = true;
 
           equipItem = $(ui.draggable).attr("id").substr(5);
@@ -122,149 +117,235 @@ var Inventory = function (_React$Component) {
 
       $(".inventory").droppable({
         drop: function drop(event, ui) {
-          if (!cell) mp.trigger("client.item.act", 1, JSON.stringify(items[ui.draggable.attr("id").substr(5)]));
+          if (!cell) {
+            mp.trigger("client.item.act", 1, JSON.stringify(items[ui.draggable.attr("id").substr(5)]));
+            $("item-" + ui.draggable.attr("id").substr(5)).unbind().draggable("destroy");
+            itemdrop = true;
+            setTimeout(function () {
+              itemdrop = false;
+            }, 10);
+            items[ui.draggable.attr("id").substr(5)] = null;
+            if (open) ReactDOM.render(React.createElement(Inventory, null), document.querySelector("#inventory"));
+          } else cell = false;
         }
       });
 
       $(document).mousedown(function (e) {
         if ($(e.target).attr("id") != "con-menu") ReactDOM.unmountComponentAtNode(document.querySelector(".menu"));
       });
+
+      for (var i = 0; items[i] !== undefined; i++) {
+        if (items[i] === null || items[i].ID >= 0 || items[i].Cell != -2) continue;
+        $("#item-" + i).draggable({
+          start: function start(event, ui) {
+            $(this).addClass("obj").css("width", items[Number($(this).attr("id").substr(5))].Size.x * size_cell + items[Number($(this).attr("id").substr(5))].Size.x - 1).css("height", items[Number($(this).attr("id").substr(5))].Size.y * size_cell + items[Number($(this).attr("id").substr(5))].Size.x - 1);
+          }
+        }).mousedown(function () {
+          var pos = $(this).offset();
+          $(this).css("position", "absolute");
+          $(this).offset(pos);
+        }).mouseup(function () {
+          if (!cell) {
+            var pos = $(this).offset();
+            $(this).css("position", "relative");
+            $(this).offset(pos);
+          }
+        }).mousemove(function (e) {
+          var pos = $("#cell").offset();
+
+          if (pos.top < e.pageY && e.pageY < pos.top + 20 && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() - 5);
+
+          if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
+        });
+      }
+    }
+  }, {
+    key: "componentDidUpdate",
+    value: function componentDidUpdate() {
+      for (var i = 0; items[i] !== undefined; i++) {
+        if (items[i] === null || items[i].ID >= 0 || items[i].Cell != -2) continue;
+        $("#item-" + i).draggable({
+          start: function start(event, ui) {
+            $(this).addClass("obj").css("width", items[Number($(this).attr("id").substr(5))].Size.x * size_cell + items[Number($(this).attr("id").substr(5))].Size.x - 1).css("height", items[Number($(this).attr("id").substr(5))].Size.y * size_cell + items[Number($(this).attr("id").substr(5))].Size.x - 1);
+          }
+        }).mousedown(function () {
+          var pos = $(this).offset();
+          $(this).css("position", "absolute");
+          $(this).offset(pos);
+        }).mouseup(function () {
+          if (!cell) {
+            var pos = $(this).offset();
+            $(this).css("position", "relative");
+            $(this).offset(pos);
+          }
+        }).mousemove(function (e) {
+          var pos = $("#cell").offset();
+
+          if (pos.top < e.pageY && e.pageY < pos.top + 20 && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() - 5);
+
+          if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
+        });
+      }
+    }
+  }, {
+    key: "componentWillUnmount",
+    value: function componentWillUnmount() {
+      $(document).unbind();
+      $(".inventory").droppable("destroy");
+      $(".equip").droppable("destroy");
+      $(".cell-body").droppable("destroy");
     }
   }, {
     key: "render",
     value: function render() {
       return React.createElement(
         "div",
-        { className: "inventory row align-items-center" },
+        { className: "container-fluid" },
         React.createElement(
           "div",
-          { className: "col-12" },
+          { className: "inventory row align-items-center" },
           React.createElement(
             "div",
-            { className: "row justify-content-center" },
+            { className: "col-12" },
             React.createElement(
               "div",
-              { className: "equip col-auto" },
+              { className: "row justify-content-center" },
               React.createElement(
                 "div",
-                { className: "head" },
+                { className: "equip col-auto" },
                 React.createElement(
-                  "h4",
-                  null,
-                  "\u042D\u043A\u0438\u043F\u0438\u0440\u043E\u0432\u043A\u0430"
-                )
-              ),
-              React.createElement(
-                "table",
-                { className: "table-bordered" },
-                React.createElement(
-                  "tbody",
-                  null,
+                  "div",
+                  { className: "head" },
                   React.createElement(
-                    "tr",
+                    "h4",
                     null,
-                    React.createElement(
-                      "td",
-                      null,
-                      React.createElement("div", { className: "equip-cell", id: "hat" })
-                    ),
-                    React.createElement(
-                      "td",
-                      null,
-                      React.createElement("div", { className: "equip-cell", id: "mask" })
-                    ),
-                    React.createElement(
-                      "td",
-                      null,
-                      React.createElement("div", { className: "equip-cell", id: "glass" })
-                    ),
-                    React.createElement(
-                      "td",
-                      null,
-                      React.createElement("div", { className: "equip-cell", id: "ears" })
-                    ),
-                    React.createElement(
-                      "td",
-                      null,
-                      React.createElement("div", { className: "equip-cell", id: "-8" })
-                    ),
-                    React.createElement(
-                      "td",
-                      null,
-                      React.createElement("div", { className: "equip-cell", id: "-4" })
-                    )
-                  ),
-                  React.createElement(
-                    "tr",
-                    null,
-                    React.createElement(
-                      "td",
-                      null,
-                      React.createElement("div", { className: "equip-cell", id: "-6" })
-                    ),
-                    React.createElement(
-                      "td",
-                      null,
-                      React.createElement("div", { className: "equip-cell", id: "accessories" })
-                    ),
-                    React.createElement(
-                      "td",
-                      null,
-                      React.createElement("div", { className: "equip-cell", id: "armor" })
-                    ),
-                    React.createElement(
-                      "td",
-                      null,
-                      React.createElement("div", { className: "equip-cell", id: "watche" })
-                    ),
-                    React.createElement(
-                      "td",
-                      null,
-                      React.createElement("div", { className: "equip-cell", id: "bracelet" })
-                    ),
-                    React.createElement(
-                      "td",
-                      null,
-                      React.createElement("div", { className: "equip-cell", id: "backpack" })
-                    )
+                    "\u042D\u043A\u0438\u043F\u0438\u0440\u043E\u0432\u043A\u0430"
                   )
-                )
-              )
-            ),
-            React.createElement(
-              "div",
-              { className: "cells col-auto" },
-              React.createElement(
-                "div",
-                { className: "head" },
-                React.createElement(
-                  "h4",
-                  null,
-                  "\u0418\u043D\u0432\u0435\u043D\u0442\u0430\u0440\u044C"
-                )
-              ),
-              React.createElement(
-                "div",
-                { id: "cell" },
+                ),
                 React.createElement(
                   "table",
                   { className: "table-bordered" },
                   React.createElement(
                     "tbody",
                     null,
-                    RenderCell(size_x, size_y)
+                    React.createElement(
+                      "tr",
+                      null,
+                      React.createElement(
+                        "td",
+                        null,
+                        React.createElement(
+                          "div",
+                          { className: "equip-cell", id: "hat" },
+                          RenderDress(-1)
+                        )
+                      ),
+                      React.createElement(
+                        "td",
+                        null,
+                        React.createElement("div", { className: "equip-cell", id: "mask" })
+                      ),
+                      React.createElement(
+                        "td",
+                        null,
+                        React.createElement("div", { className: "equip-cell", id: "glass" })
+                      ),
+                      React.createElement(
+                        "td",
+                        null,
+                        React.createElement("div", { className: "equip-cell", id: "ears" })
+                      ),
+                      React.createElement(
+                        "td",
+                        null,
+                        React.createElement("div", { className: "equip-cell", id: "-8" })
+                      ),
+                      React.createElement(
+                        "td",
+                        null,
+                        React.createElement(
+                          "div",
+                          { className: "equip-cell", id: "-4" },
+                          RenderDress(-4)
+                        )
+                      )
+                    ),
+                    React.createElement(
+                      "tr",
+                      null,
+                      React.createElement(
+                        "td",
+                        null,
+                        React.createElement(
+                          "div",
+                          { className: "equip-cell", id: "-6" },
+                          RenderDress(-6)
+                        )
+                      ),
+                      React.createElement(
+                        "td",
+                        null,
+                        React.createElement("div", { className: "equip-cell", id: "accessories" })
+                      ),
+                      React.createElement(
+                        "td",
+                        null,
+                        React.createElement("div", { className: "equip-cell", id: "armor" })
+                      ),
+                      React.createElement(
+                        "td",
+                        null,
+                        React.createElement("div", { className: "equip-cell", id: "watche" })
+                      ),
+                      React.createElement(
+                        "td",
+                        null,
+                        React.createElement("div", { className: "equip-cell", id: "bracelet" })
+                      ),
+                      React.createElement(
+                        "td",
+                        null,
+                        React.createElement("div", { className: "equip-cell", id: "backpack" })
+                      )
+                    )
+                  )
+                )
+              ),
+              React.createElement(
+                "div",
+                { className: "cells col-auto" },
+                React.createElement(
+                  "div",
+                  { className: "head" },
+                  React.createElement(
+                    "h4",
+                    null,
+                    "\u0418\u043D\u0432\u0435\u043D\u0442\u0430\u0440\u044C"
                   )
                 ),
                 React.createElement(
                   "div",
-                  { id: "items" },
-                  React.createElement(RenderItem, null)
+                  { id: "cell" },
+                  React.createElement(
+                    "table",
+                    { className: "table-bordered" },
+                    React.createElement(
+                      "tbody",
+                      null,
+                      RenderCell(size_x, size_y)
+                    )
+                  ),
+                  React.createElement(
+                    "div",
+                    { id: "items" },
+                    React.createElement(RenderItem, null)
+                  )
                 )
               )
             )
-          )
-        ),
-        React.createElement("div", { className: "menu" })
+          ),
+          React.createElement("div", { className: "menu" })
+        )
       );
     }
   }]);
@@ -284,126 +365,54 @@ var RenderItem = function (_React$Component2) {
   _createClass(RenderItem, [{
     key: "componentDidMount",
     value: function componentDidMount() {
-      for (var i = 0; items[i] != undefined; i++) {
-        if (items[i] == null) continue;
+      RenderItem_Event();
+    }
+  }, {
+    key: "componentDidUpdate",
+    value: function componentDidUpdate() {
+      for (var i = 0; items[i] !== undefined; i++) {
+        if (items[i] === null) continue;
         var itemDOM = $("#item-" + i);
-
-        if (items[i].ID < 0) {
-          itemDOM.addClass("dress");
-        }
-
-        itemDOM.mousedown(function (e) {
-          if (e.button == 0) {
-            var pos = $(this).offset();
-            $(this).css("position", "absolute");
-            $(this).offset(pos);
-
-            for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
-              if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
-                elem = true;
-                continue;
-              }
-              if (elem) {
-                var offset = $("#items > .obj:nth-child(" + i + ")").offset();
-                offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
-                $("#items > .obj:nth-child(" + i + ")").offset(offset);
-              }
-            }
-          }
-        }).contextmenu(function (e) {
-          var x = 0;
-          var y = 0;
-          var d = document;
-          var w = window;
-
-          if (d.attachEvent != null) {
-            // Internet Explorer & Opera
-            x = w.e.clientX + (d.documentElement.scrollLeft ? d.documentElement.scrollLeft : d.body.scrollLeft);
-            y = w.e.clientY + (d.documentElement.scrollTop ? d.documentElement.scrollTop : d.body.scrollTop);
-          } else if (!d.attachEvent && d.addEventListener) {
-            // Gecko
-            x = e.clientX + w.scrollX;
-            y = e.clientY + w.scrollY;
-          }
-
-          ReactDOM.render(React.createElement(Menu, { x: x, y: y, id: $(this).attr("id").substr(5) }), document.querySelector(".menu"));
-          return false;
-        }).mouseup(function (e) {
-          if (!cell) {
-            var pos = $(this).offset();
-            $(this).css("position", "relative");
-            $(this).offset(pos);
-          }
-          if (!startdrag && e.button == 0) {
-            for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
-              if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
-                elem = true;
-                continue;
-              }
-              if (elem) {
-                var offset = $("#items > .obj:nth-child(" + i + ")").offset();
-                offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
-                $("#items > .obj:nth-child(" + i + ")").offset(offset);
-              }
-            }
-          }
-        }).draggable({
-          start: function start(event, ui) {
-            for (var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
-              for (var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
-                cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
-              }
-            }
-            startdrag = true;
-          },
-          stop: function stop(event, ui) {
-            for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
-              if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
-                elem = true;
-                continue;
-              }
-              if (elem) {
-                var offset = $("#items > .obj:nth-child(" + i + ")").offset();
-                offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
-                $("#items > .obj:nth-child(" + i + ")").offset(offset);
-              }
-            }
-            if (!cell) {
-              $(this).css("position", "relative").offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
-              for (var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
-                for (var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
-                  cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
-                }
-              }
-            }
-            startdrag = false;
-          },
-          scroll: false
-        }).mousemove(function (e) {
-          var pos = $("#cell").offset();
-
-          if (pos.top < e.pageY && e.pageY < pos.top + 20 && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() - 5);
-
-          if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
-        }).css("position", "relative").offset($("#" + items[i].Cell).offset());
+        itemDOM.unbind();
+        if (itemDOM.draggable("instance") != undefined) itemDOM.draggable("destroy");
+      }
+      setTimeout(function () {
+        RenderItem_Event();
+      }, 10);
+    }
+  }, {
+    key: "componentWillUnmount",
+    value: function componentWillUnmount() {
+      for (var i = 0; items[i] !== undefined; i++) {
+        if (items[i] === null) continue;
+        var itemDOM = $("#item-" + i);
+        itemDOM.unbind();
+        if (itemDOM.draggable("instance") != undefined) itemDOM.draggable("destroy");
       }
     }
   }, {
     key: "render",
     value: function render() {
       var elem = [];
-      for (var i = 0; items[i] != undefined; i++) {
-        if (items[i] == null) continue;
+      for (var i = 0; items[i] !== undefined; i++) {
+        if (items[i] === null || items[i].Cell == -2) continue;
 
         var style = {
-          width: items[i].Size.y * size_cell + items[i].Size.y - 1,
-          height: items[i].Size.x * size_cell + items[i].Size.x - 1
+          width: items[i].Size.x * size_cell + items[i].Size.x - 1,
+          height: items[i].Size.y * size_cell + items[i].Size.y - 1
         };
+        if (items[i].Count > 1) var szcount = React.createElement(
+          "span",
+          { className: "count" },
+          items[i].Count
+        );
         elem[i] = React.createElement(
           "div",
           { key: i, className: "obj", id: "item-" + i, style: style },
-          React.createElement("img", { src: 'img/items/' + items[i].ID + '.png', width: "100%" })
+          React.createElement("img", { src: 'img/items/' + items[i].ID + '.png', width: "100%" }),
+          szcount
         );
+        szcount = undefined;
       }
 
       return elem;
@@ -429,6 +438,8 @@ var Menu = function (_React$Component3) {
     key: "DropItem",
     value: function DropItem() {
       mp.trigger("client.item.act", 1, JSON.stringify(items[this.props.id]));
+      items[this.props.id] = null;
+      if (open) ReactDOM.render(React.createElement(Inventory, null), document.querySelector("#inventory"));
     }
   }, {
     key: "render",
@@ -459,7 +470,7 @@ var Menu = function (_React$Component3) {
   return Menu;
 }(React.Component);
 
-function RenderCell(x, y) {
+function RenderCell() {
   var elem = [];
   var elem2 = [];
   for (var i = 0; i < size_y; i++) {
@@ -470,7 +481,7 @@ function RenderCell(x, y) {
         { className: "cell", key: k + i * size_x },
         React.createElement("div", { className: "cell-body droppable", id: k + i * size_x })
       );
-      cells[k + i * size_x] = false;
+      if (!cells[k + i * size_x]) cells[k + i * size_x] = false;
     }
     elem[i] = React.createElement(
       "tr",
@@ -481,11 +492,130 @@ function RenderCell(x, y) {
   return elem;
 }
 
-//ReactDOM.render(<Inventory />, document.querySelector("#inventory"));
+function RenderDress(id) {
+  for (var i = 0; items[i] !== undefined; i++) {
+    if (items[i] === null || items[i].ID >= 0 || items[i].ID != id || items[i].Cell != -2) continue;
+
+    var elem = React.createElement(
+      "div",
+      { className: "dress", id: "item-" + i },
+      React.createElement("img", { src: 'img/items/' + items[i].ID + '.png', width: "100%" })
+    );
+    return elem;
+  }
+}
+
+function RenderItem_Event() {
+  for (var i = 0; items[i] !== undefined; i++) {
+    if (items[i] === null || items[i].Cell == -2) continue;
+    console.log(i);
+    var itemDOM = $("#item-" + i);
+
+    if (items[i].ID < 0) {
+      itemDOM.addClass("dress");
+    }
+
+    itemDOM.mousedown(function (e) {
+      if (e.button == 0) {
+        var pos = $(this).offset();
+        $(this).css("position", "absolute");
+        $(this).offset(pos);
+
+        for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
+          if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
+            elem = true;
+            continue;
+          }
+          if (elem) {
+            var offset = $("#items > .obj:nth-child(" + i + ")").offset();
+            offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+            $("#items > .obj:nth-child(" + i + ")").offset(offset);
+          }
+        }
+      }
+    }).contextmenu(function (e) {
+      var x = 0;
+      var y = 0;
+      var d = document;
+      var w = window;
+
+      if (d.attachEvent != null) {
+        // Internet Explorer & Opera
+        x = w.e.clientX + (d.documentElement.scrollLeft ? d.documentElement.scrollLeft : d.body.scrollLeft);
+        y = w.e.clientY + (d.documentElement.scrollTop ? d.documentElement.scrollTop : d.body.scrollTop);
+      } else if (!d.attachEvent && d.addEventListener) {
+        // Gecko
+        x = e.clientX + w.scrollX;
+        y = e.clientY + w.scrollY;
+      }
+
+      ReactDOM.render(React.createElement(Menu, { x: x, y: y, id: $(this).attr("id").substr(5) }), document.querySelector(".menu"));
+      return false;
+    }).mouseup(function (e) {
+      if (!cell) {
+        var pos = $(this).offset();
+        $(this).css("position", "relative");
+        $(this).offset(pos);
+      }
+      if (!startdrag && e.button == 0) {
+        for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
+          if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
+            elem = true;
+            continue;
+          }
+          if (elem) {
+            var offset = $("#items > .obj:nth-child(" + i + ")").offset();
+            offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+            $("#items > .obj:nth-child(" + i + ")").offset(offset);
+          }
+        }
+      }
+    }).draggable({
+      start: function start(event, ui) {
+        for (var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
+          for (var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
+            cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
+          }
+        }
+        startdrag = true;
+      },
+      stop: function stop(event, ui) {
+        for (var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
+          if ($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
+            elem = true;
+            continue;
+          }
+          if (elem) {
+            var offset = $("#items > .obj:nth-child(" + i + ")").offset();
+            offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+            $("#items > .obj:nth-child(" + i + ")").offset(offset);
+          }
+        }
+        if (!cell && !itemdrop) {
+          $(this).css("position", "relative").offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
+          for (var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
+            for (var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
+              cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
+            }
+          }
+        }
+        startdrag = false;
+      },
+      scroll: false
+    }).mousemove(function (e) {
+      var pos = $("#cell").offset();
+
+      if (pos.top < e.pageY && e.pageY < pos.top + 20 && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() - 5);
+
+      if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
+    }).css("position", "relative").offset($("#" + items[i].Cell).offset());
+  }
+}
 
 var cell;
 var equipItem;
 var startdrag;
+var itemdrop;
 
 function ItemUse(response) {
   var itemID = $("#item-" + equipItem);
@@ -501,38 +631,9 @@ function ItemUse(response) {
         $("#items > .obj:nth-child(" + i + ")").offset(offset);
       }
     }
-    $(itemID).draggable("destroy").remove();
+
     items[equipItem].Cell = -2;
-
-    $("#" + items[equipItem].ID).html("<div id='item-" + equipItem + "'><img src='img/items/" + items[equipItem].ID + ".png' width='100%'></div>");
-    $("#item-" + equipItem).draggable({
-      start: function start(event, ui) {
-        $(this).addClass("obj").css("width", items[$(this).attr("id").substr(5)].Size.x * size_cell + items[$(this).attr("id").substr(5)].Size.x - 1).css("height", items[$(this).attr("id").substr(5)].Size.y * size_cell + items[$(this).attr("id").substr(5)].Size.x - 1);
-        startdrag = true;
-      },
-      stop: function stop(event, ui) {
-        if (!cell) {
-          $(this).css("position", "static").css("width", "100%").css("height", "100%").removeClass("obj");
-          startdrag = false;
-        }
-      }
-    }).mousedown(function () {
-      var pos = $(this).offset();
-      $(this).css("position", "absolute");
-      $(this).offset(pos);
-    }).mouseup(function () {
-      if (!cell) {
-        var pos = $(this).offset();
-        $(this).css("position", "relative");
-        $(this).offset(pos);
-      }
-    }).mousemove(function (e) {
-      var pos = $("#cell").offset();
-
-      if (pos.top < e.pageY && e.pageY < pos.top + 20 && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() - 5);
-
-      if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
-    });
+    ReactDOM.render(React.createElement(Inventory, null), document.querySelector("#inventory"));
   } /*else {
     itemID.css("position", "relative")
     .offset($("#" + items[equipItem].Cell).offset());
@@ -547,14 +648,8 @@ function ItemUse(response) {
 
 function push_cell(drag, drop) {
   if (check_cells($(drop).attr("id"), drag)) {
-
     if (items[Number($(drag).attr("id").substr(5))].Cell == -2) {
       var itemID = $(drag).attr("id").substr(5);
-
-      $(drag).draggable("destroy").remove();
-
-      drag = CreateItem("#items", itemID, items[itemID].ID);
-      drag.css("width", items[itemID].Size.x * size_cell + items[itemID].Size.x - 1).css("height", items[itemID].Size.y * size_cell + items[itemID].Size.y - 1);
 
       mp.trigger("client.item.use", JSON.stringify(items[itemID]));
     }
@@ -565,11 +660,11 @@ function push_cell(drag, drop) {
       for (var k = 0; k < items[Number($(drag).attr("id").substr(5))].Size.y; k++) {
 
         cells[Number($(drop).attr("id")) + i + k * size_x] = true;
-        items[Number($(drag).attr("id").substr(5))].Cell = Number($(drop).attr("id"));
       }
     }
-    cell = true;
-    //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+    items[Number($(drag).attr("id").substr(5))].Cell = Number($(drop).attr("id"));
+    ReactDOM.render(React.createElement(Inventory, null), document.querySelector("#inventory"));
+    mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   } else {
     $(drag).css("position", "relative").offset($("#" + items[Number($(drag).attr("id").substr(5))].Cell).offset());
 
@@ -579,6 +674,7 @@ function push_cell(drag, drop) {
       }
     }
   }
+  cell = true;
 }
 
 function check_cells(id, drag) {
@@ -602,29 +698,6 @@ function add_item(x, y, type, count, stack) {
   }
 
   if (szcell == -2) {
-    $("#" + type).html("<div id='item-" + item + "'><img src='img/items/" + type + ".png' width='100%'></div>");
-    $("#item-" + item).draggable({
-      start: function start(event, ui) {
-        $(this).addClass("obj").css("width", x * size_cell + x - 1).css("height", y * size_cell + x - 1);
-      }
-    }).mousedown(function () {
-      var pos = $(this).offset();
-      $(this).css("position", "absolute");
-      $(this).offset(pos);
-    }).mouseup(function () {
-      if (!cell) {
-        var pos = $(this).offset();
-        $(this).css("position", "relative");
-        $(this).offset(pos);
-      }
-    }).mousemove(function (e) {
-      var pos = $("#cell").offset();
-
-      if (pos.top < e.pageY && e.pageY < pos.top + 20 && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() - 5);
-
-      if (pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height() && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width()) $("#cell").scrollTop($("#cell").scrollTop() + 5);
-    });
-
     items[item] = new Item(type, szcell, x, y, count, stack, data);
     item++;
   } else {
@@ -646,7 +719,8 @@ function add_item(x, y, type, count, stack) {
       item++;
     }
   }
-  //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+  if (open) ReactDOM.render(React.createElement(Inventory, null), document.querySelector("#inventory"));
+  mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
 }
 
 function get_freecell(x, y) {
@@ -667,11 +741,12 @@ function get_freecell(x, y) {
   return -1;
 }
 
-function OpenInventory() {
-  $('#inventory').css('display', 'block');
-  for (var i = 0; i < items.length; i++) {
-    if ($("#item-" + i).length && items[i].Cell != -2) {
-      $("#item-" + i).offset($("#" + items[i].Cell).offset());
-    }
+function OpenCloseInventory() {
+  if (!open) {
+    ReactDOM.render(React.createElement(Inventory, null), document.querySelector("#inventory"));
+    open = true;
+  } else {
+    ReactDOM.unmountComponentAtNode(document.querySelector("#inventory"));
+    open = false;
   }
 }

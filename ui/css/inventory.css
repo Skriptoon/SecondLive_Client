@@ -39,3 +39,13 @@ padding: 0;
 .cells {
     position: static;
 }
+
+.count {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    color:#fff;
+    background: gray;
+    width: 24px;
+    text-align: center;
+}

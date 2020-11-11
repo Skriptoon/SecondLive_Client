@@ -2,14 +2,13 @@ var open_inv;
 mp.keys.bind(0x49, true, () => {
     if(global.chat) return;
     if(open_inv) {
-        Browser.index.execute("$('#inventory').css('display', 'none')");
         mp.gui.cursor.show(false, false);
         open_inv = false;
     } else {
-        Browser.index.execute("OpenInventory()");
         mp.gui.cursor.show(true, true);
         open_inv = true;
     }
+    Browser.index.execute("OpenCloseInventory()");
 });
 
 mp.events.add("client.additem", (item) => {

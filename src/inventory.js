@@ -8,6 +8,8 @@ var item = 0;
 var items = [];
 var cells = [];
 
+var open = false;
+
 class Size {
   constructor(x, y) {
     this.x = x;
@@ -37,9 +39,6 @@ class Inventory extends React.Component {
   
           if(cell) return;
   
-          setTimeout(() => {
-          cell = false;
-          }, 100)
           if(items[$(ui.draggable).attr("id").substr(5)].Size.x == 1 && items[$(ui.draggable).attr("id").substr(5)].Size.y == 1) {
             if(drop_coords.top == drag_coords.top) {
               if((drop_coords.left + size_cell - drag_coords.left) * size_cell / (size_cell*size_cell) > 0.5)
@@ -91,13 +90,9 @@ class Inventory extends React.Component {
     $(".equip").droppable({
       drop: function(event, ui) {
         if(cell) return;
-    
-        setTimeout(() => {
-        cell = false;
-        }, 100);
-    
+  
         cell = true;
-    
+
         equipItem = $(ui.draggable).attr("id").substr(5);
         mp.trigger("client.item.use", JSON.stringify(items[equipItem]));
       },
@@ -106,8 +101,18 @@ class Inventory extends React.Component {
     
     $(".inventory").droppable({
       drop: function(event, ui) {
-        if(!cell)
-        mp.trigger("client.item.act", 1, JSON.stringify(items[ui.draggable.attr("id").substr(5)]));
+        if(!cell) {
+          mp.trigger("client.item.act", 1, JSON.stringify(items[ui.draggable.attr("id").substr(5)]));
+          $("item-" + ui.draggable.attr("id").substr(5)).unbind()
+            .draggable("destroy");
+          itemdrop = true
+          setTimeout(() => {itemdrop = false}, 10)
+          items[ui.draggable.attr("id").substr(5)] = null;
+          if(open)
+            ReactDOM.render(<Inventory />, document.querySelector("#inventory"))
+        }
+        else 
+          cell = false
       }
     });
     
@@ -115,56 +120,135 @@ class Inventory extends React.Component {
       if($(e.target).attr("id") != "con-menu")
       ReactDOM.unmountComponentAtNode(document.querySelector(".menu"))
     });
+
+    for(var i = 0; items[i] !== undefined; i++)  {
+      if(items[i] === null || items[i].ID >= 0 || items[i].Cell != -2) continue;
+      $("#item-" + i).draggable({
+        start: function(event, ui){
+          $(this).addClass("obj")
+            .css("width", items[Number($(this).attr("id").substr(5))].Size.x * size_cell + items[Number($(this).attr("id").substr(5))].Size.x - 1)
+            .css("height", items[Number($(this).attr("id").substr(5))].Size.y * size_cell + items[Number($(this).attr("id").substr(5))].Size.x - 1);
+        }
+      })
+      .mousedown(function() {
+        var pos = $(this).offset();
+        $(this).css("position", "absolute");
+        $(this).offset(pos);
+      })
+      .mouseup(function() {
+        if(!cell) {
+          var pos = $(this).offset();
+          $(this).css("position", "relative");
+          $(this).offset(pos);
+        }
+      })
+      .mousemove(function(e) {
+        var pos = $("#cell").offset();
+    
+        if(pos.top < e.pageY && e.pageY < pos.top + 20
+        && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
+        $("#cell").scrollTop($("#cell").scrollTop() - 5);
+    
+        if(pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height()
+        && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
+        $("#cell").scrollTop($("#cell").scrollTop() + 5);
+      });
+    }
+  }
+
+  componentDidUpdate() {
+    for(var i = 0; items[i] !== undefined; i++)  {
+      if(items[i] === null || items[i].ID >= 0 || items[i].Cell != -2) continue;
+      $("#item-" + i).draggable({
+        start: function(event, ui){
+          $(this).addClass("obj")
+            .css("width", items[Number($(this).attr("id").substr(5))].Size.x * size_cell + items[Number($(this).attr("id").substr(5))].Size.x - 1)
+            .css("height", items[Number($(this).attr("id").substr(5))].Size.y * size_cell + items[Number($(this).attr("id").substr(5))].Size.x - 1);
+        }
+      })
+      .mousedown(function() {
+        var pos = $(this).offset();
+        $(this).css("position", "absolute");
+        $(this).offset(pos);
+      })
+      .mouseup(function() {
+        if(!cell) {
+          var pos = $(this).offset();
+          $(this).css("position", "relative");
+          $(this).offset(pos);
+        }
+      })
+      .mousemove(function(e) {
+        var pos = $("#cell").offset();
+    
+        if(pos.top < e.pageY && e.pageY < pos.top + 20
+        && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
+        $("#cell").scrollTop($("#cell").scrollTop() - 5);
+    
+        if(pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height()
+        && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
+        $("#cell").scrollTop($("#cell").scrollTop() + 5);
+      });
+    }
+  }
+
+  componentWillUnmount() {
+    $(document).unbind();
+    $(".inventory").droppable("destroy");
+    $(".equip").droppable("destroy");
+    $(".cell-body").droppable("destroy");
   }
 
   render() {
     return(
-      <div className="inventory row align-items-center">
-        <div className="col-12">
-          <div className="row justify-content-center">
-            <div className="equip col-auto">
-              <div className="head">
-                <h4>Экипировка</h4>
+      <div className="container-fluid">
+        <div className="inventory row align-items-center">
+          <div className="col-12">
+            <div className="row justify-content-center">
+              <div className="equip col-auto">
+                <div className="head">
+                  <h4>Экипировка</h4>
+                </div>
+                <table className="table-bordered">
+                  <tbody>
+                    <tr>
+                      <td><div className="equip-cell" id="hat">{RenderDress(-1)}</div></td>
+                      <td><div className="equip-cell" id="mask"></div></td>
+                      <td><div className="equip-cell" id="glass"></div></td>
+                      <td><div className="equip-cell" id="ears"></div></td>
+                      <td><div className="equip-cell" id="-8"></div></td>
+                      <td><div className="equip-cell" id="-4">{RenderDress(-4)}</div></td>
+                    </tr>
+                    <tr>
+                      <td><div className="equip-cell" id="-6">{RenderDress(-6)}</div></td>
+                      <td><div className="equip-cell" id="accessories"></div></td>
+                      <td><div className="equip-cell" id="armor"></div></td>
+                      <td><div className="equip-cell" id="watche"></div></td>
+                      <td><div className="equip-cell" id="bracelet"></div></td>
+                      <td><div className="equip-cell" id="backpack"></div></td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-              <table className="table-bordered">
-                <tbody>
-                  <tr>
-                    <td><div className="equip-cell" id="hat"></div></td>
-                    <td><div className="equip-cell" id="mask"></div></td>
-                    <td><div className="equip-cell" id="glass"></div></td>
-                    <td><div className="equip-cell" id="ears"></div></td>
-                    <td><div className="equip-cell" id="-8"></div></td>
-                    <td><div className="equip-cell" id="-4"></div></td>
-                  </tr>
-                  <tr>
-                    <td><div className="equip-cell" id="-6"></div></td>
-                    <td><div className="equip-cell" id="accessories"></div></td>
-                    <td><div className="equip-cell" id="armor"></div></td>
-                    <td><div className="equip-cell" id="watche"></div></td>
-                    <td><div className="equip-cell" id="bracelet"></div></td>
-                    <td><div className="equip-cell" id="backpack"></div></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div className="cells col-auto">
-              <div className="head">
-                <h4>Инвентарь</h4>
-              </div>
-              <div id="cell">
-              <table className="table-bordered">
-                <tbody>
-                  {RenderCell(size_x, size_y)}
-                </tbody>
-              </table>
-              <div id="items">
-                <RenderItem />
-              </div>
+              <div className="cells col-auto">
+                <div className="head">
+                  <h4>Инвентарь</h4>
+                </div>
+                <div id="cell">
+                <table className="table-bordered">
+                  <tbody>
+                    {RenderCell(size_x, size_y)}
+                  </tbody>
+                </table>
+                <div id="items">
+                  <RenderItem />
+                </div>
+                </div>
               </div>
             </div>
           </div>
+          <div className="menu"></div>
         </div>
-        <div className="menu"></div>
       </div>
     )
   }
@@ -173,130 +257,43 @@ class Inventory extends React.Component {
 class RenderItem extends React.Component {
 
   componentDidMount() {
-    for(var i = 0; items[i] != undefined; i++)  {
-      if(items[i] == null) continue;
+    RenderItem_Event()
+  }
+
+  componentDidUpdate() {
+    for(var i = 0; items[i] !== undefined; i++)  {
+      if(items[i] === null) continue;
       var itemDOM = $("#item-" + i);
+      itemDOM.unbind();
+      if(itemDOM.draggable("instance") != undefined)
+        itemDOM.draggable("destroy");
+    }
+    setTimeout(() => {RenderItem_Event()}, 10)
+  }
 
-      if(items[i].ID < 0) {
-        itemDOM.addClass("dress");
-      }
-
-      itemDOM.mousedown(function(e) {
-        if(e.button == 0) {
-          var pos = $(this).offset();
-          $(this).css("position", "absolute");
-          $(this).offset(pos);
-          
-          for(var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
-            if($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
-              elem = true;
-              continue;
-            }
-            if(elem) {
-              var offset = $("#items > .obj:nth-child(" + i + ")").offset();
-              offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
-              $("#items > .obj:nth-child(" + i + ")").offset(offset);
-            }
-          }
-        }
-      })
-      .contextmenu(function(e) {
-        var x = 0; 
-        var y = 0;
-        var d = document;
-        var w = window;
-
-        if (d.attachEvent != null) { // Internet Explorer & Opera
-            x = w.e.clientX + (d.documentElement.scrollLeft ? d.documentElement.scrollLeft : d.body.scrollLeft);
-            y = w.e.clientY + (d.documentElement.scrollTop ? d.documentElement.scrollTop : d.body.scrollTop);
-        } else if (!d.attachEvent && d.addEventListener) { // Gecko
-            x = e.clientX + w.scrollX;
-            y = e.clientY + w.scrollY;
-        }
-
-        ReactDOM.render(<Menu x={x} y={y} id={$(this).attr("id").substr(5)}/>, document.querySelector(".menu"))
-        return false;
-      })
-      .mouseup(function(e) {
-        if(!cell) {
-          var pos = $(this).offset();
-          $(this).css("position", "relative");
-          $(this).offset(pos)
-        }
-        if(!startdrag && e.button == 0) {
-          for(var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
-            if($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
-              elem = true;
-              continue;
-            }
-            if(elem) {
-              var offset = $("#items > .obj:nth-child(" + i + ")").offset();
-              offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
-              $("#items > .obj:nth-child(" + i + ")").offset(offset);
-            }
-          }
-        }
-      })
-      .draggable({
-        start: function( event, ui ) {
-          for(var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
-            for(var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
-              cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
-            }
-          }
-          startdrag = true;
-        },
-        stop: function(event, ui) {
-          for(var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
-            if($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
-              elem = true;
-              continue;
-            }
-            if(elem) {
-              var offset = $("#items > .obj:nth-child(" + i + ")").offset();
-              offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
-              $("#items > .obj:nth-child(" + i + ")").offset(offset);
-            }
-          }
-          if(!cell) {
-            $(this).css("position", "relative")
-              .offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
-            for(var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
-              for(var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
-                cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
-              }
-            }
-          }
-          startdrag = false;
-        },
-        scroll: false
-      })
-      .mousemove(function(e) {
-        var pos = $("#cell").offset();
-
-        if(pos.top < e.pageY && e.pageY < pos.top + 20
-        && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
-        $("#cell").scrollTop($("#cell").scrollTop() - 5);
-
-        if(pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height()
-        && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
-        $("#cell").scrollTop($("#cell").scrollTop() + 5);
-      })
-      .css("position", "relative")
-      .offset($("#" + items[i].Cell).offset())
+  componentWillUnmount() {
+    for(var i = 0; items[i] !== undefined; i++)  {
+      if(items[i] === null) continue;
+      var itemDOM = $("#item-" + i);
+      itemDOM.unbind();
+      if(itemDOM.draggable("instance") != undefined)
+        itemDOM.draggable("destroy");
     }
   }
 
   render() {
     var elem = [];
-    for(var i = 0; items[i] != undefined; i++)  {
-      if(items[i] == null) continue;
+    for(var i = 0; items[i] !== undefined; i++)  {
+      if(items[i] === null || items[i].Cell == -2) continue;
 
       var style = {
-        width: items[i].Size.y * size_cell + items[i].Size.y - 1,
-        height: items[i].Size.x * size_cell + items[i].Size.x - 1
+        width: items[i].Size.x * size_cell + items[i].Size.x - 1,
+        height: items[i].Size.y * size_cell + items[i].Size.y - 1
       }
-      elem[i] = <div key={i} className="obj" id={"item-" + i} style={style}><img src={'img/items/' + items[i].ID + '.png'} width="100%" /></div>;
+      if(items[i].Count > 1)
+        var szcount = <span className="count">{items[i].Count}</span>;
+      elem[i] = <div key={i} className="obj" id={"item-" + i} style={style}><img src={'img/items/' + items[i].ID + '.png'} width="100%" />{szcount}</div>;
+      szcount = undefined;
     }
 
     return elem;
@@ -311,6 +308,9 @@ class Menu extends React.Component {
 
   DropItem() {
     mp.trigger("client.item.act", 1, JSON.stringify(items[this.props.id]));
+    items[this.props.id] = null;
+    if(open)
+      ReactDOM.render(<Inventory />, document.querySelector("#inventory"))
   }
 
   render() {
@@ -331,25 +331,150 @@ class Menu extends React.Component {
   }
 }
 
-function RenderCell(x, y) {
+function RenderCell() {
   var elem = [];
   var elem2 = [];
   for(let i = 0; i < size_y; i++) {
     elem2[i] = [];
     for(var k = 0; k < size_x; k++) {
       elem2[i][k] = <td className="cell" key={k + i * size_x}><div className="cell-body droppable" id={k + i * size_x}></div></td>;
-      cells[k + i * size_x] = false;
+      if(!cells[k + i * size_x])
+        cells[k + i * size_x] = false;
     }
     elem[i] = <tr key={i}>{elem2[i]}</tr>;
   }
   return elem;
 }
 
-//ReactDOM.render(<Inventory />, document.querySelector("#inventory"));
+function RenderDress(id) {
+  for(var i = 0; items[i] !== undefined; i++)  {
+    if(items[i] === null || items[i].ID >= 0 || items[i].ID != id || items[i].Cell != -2) continue;
+
+    var elem = <div className="dress" id={"item-" + i}><img src={'img/items/' + items[i].ID + '.png'} width='100%'/></div>;
+    return elem;
+  }
+}
+
+function RenderItem_Event() {
+  for(var i = 0; items[i] !== undefined; i++)  {
+    if(items[i] === null || items[i].Cell == -2) continue;
+    console.log(i)
+    var itemDOM = $("#item-" + i);
+
+    if(items[i].ID < 0) {
+      itemDOM.addClass("dress");
+    }
+
+    itemDOM.mousedown(function(e) {
+      if(e.button == 0) {
+        var pos = $(this).offset();
+        $(this).css("position", "absolute");
+        $(this).offset(pos);
+        
+        for(var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
+          if($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
+            elem = true;
+            continue;
+          }
+          if(elem) {
+            var offset = $("#items > .obj:nth-child(" + i + ")").offset();
+            offset.top += size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+            $("#items > .obj:nth-child(" + i + ")").offset(offset);
+          }
+        }
+      }
+    })
+    .contextmenu(function(e) {
+      var x = 0; 
+      var y = 0;
+      var d = document;
+      var w = window;
+
+      if (d.attachEvent != null) { // Internet Explorer & Opera
+          x = w.e.clientX + (d.documentElement.scrollLeft ? d.documentElement.scrollLeft : d.body.scrollLeft);
+          y = w.e.clientY + (d.documentElement.scrollTop ? d.documentElement.scrollTop : d.body.scrollTop);
+      } else if (!d.attachEvent && d.addEventListener) { // Gecko
+          x = e.clientX + w.scrollX;
+          y = e.clientY + w.scrollY;
+      }
+
+      ReactDOM.render(<Menu x={x} y={y} id={$(this).attr("id").substr(5)}/>, document.querySelector(".menu"))
+      return false;
+    })
+    .mouseup(function(e) {
+      if(!cell) {
+        var pos = $(this).offset();
+        $(this).css("position", "relative");
+        $(this).offset(pos)
+      }
+      if(!startdrag && e.button == 0) {
+        for(var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
+          if($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
+            elem = true;
+            continue;
+          }
+          if(elem) {
+            var offset = $("#items > .obj:nth-child(" + i + ")").offset();
+            offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+            $("#items > .obj:nth-child(" + i + ")").offset(offset);
+          }
+        }
+      }
+    })
+    .draggable({
+      start: function( event, ui ) {
+        for(var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
+          for(var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
+            cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = false;
+          }
+        }
+        startdrag = true;
+      },
+      stop: function(event, ui) {
+        for(var i = 1, elem; $("#items > .obj:nth-child(" + i + ")").length; i++) {
+          if($(this).attr("id").substr(5) == $("#items > .obj:nth-child(" + i + ")").attr("id").substr(5)) {
+            elem = true;
+            continue;
+          }
+          if(elem) {
+            var offset = $("#items > .obj:nth-child(" + i + ")").offset();
+            offset.top -= size_cell * items[Number($(this).attr("id").substr(5))].Size.y + items[Number($(this).attr("id").substr(5))].Size.y - 1;
+            $("#items > .obj:nth-child(" + i + ")").offset(offset);
+          }
+        }
+        if(!cell && ! itemdrop) {
+          $(this).css("position", "relative")
+            .offset($("#" + items[Number($(this).attr("id").substr(5))].Cell).offset());
+          for(var i = 0; i < items[Number($(this).attr("id").substr(5))].Size.x; i++) {
+            for(var k = 0; k < items[Number($(this).attr("id").substr(5))].Size.y; k++) {
+              cells[items[Number($(this).attr("id").substr(5))].Cell + i + k * size_x] = true;
+            }
+          }
+        }
+        startdrag = false;
+      },
+      scroll: false
+    })
+    .mousemove(function(e) {
+      var pos = $("#cell").offset();
+
+      if(pos.top < e.pageY && e.pageY < pos.top + 20
+      && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
+      $("#cell").scrollTop($("#cell").scrollTop() - 5);
+
+      if(pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height()
+      && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
+      $("#cell").scrollTop($("#cell").scrollTop() + 5);
+    })
+    .css("position", "relative")
+    .offset($("#" + items[i].Cell).offset())
+  }
+}
 
 var cell;
 var equipItem;
 var startdrag;
+var itemdrop;
 
 function ItemUse(response) {
   var itemID = $("#item-" + equipItem);
@@ -365,52 +490,9 @@ function ItemUse(response) {
         $("#items > .obj:nth-child(" + i + ")").offset(offset);
       }
     }
-    $(itemID).draggable("destroy")
-    .remove();
-    items[equipItem].Cell = -2;
 
-    $("#" + items[equipItem].ID).html("<div id='item-" + equipItem + "'><img src='img/items/" + items[equipItem].ID + ".png' width='100%'></div>");
-    $("#item-" + equipItem)
-    .draggable({
-      start: function(event, ui) {
-        $(this).addClass("obj")
-          .css("width", items[$(this).attr("id").substr(5)].Size.x * size_cell + items[$(this).attr("id").substr(5)].Size.x - 1)
-          .css("height", items[$(this).attr("id").substr(5)].Size.y * size_cell + items[$(this).attr("id").substr(5)].Size.x - 1);
-          startdrag = true;
-      },
-      stop: function(event, ui) {
-        if(!cell) {
-          $(this).css("position", "static")
-          .css("width", "100%")
-          .css("height", "100%")
-          .removeClass("obj");
-          startdrag = false;
-        }
-      }
-    })
-    .mousedown(function() {
-      var pos = $(this).offset();
-      $(this).css("position", "absolute");
-      $(this).offset(pos);
-    })
-    .mouseup(function() {
-      if(!cell) {
-        var pos = $(this).offset();
-        $(this).css("position", "relative");
-        $(this).offset(pos);
-      }
-    })
-    .mousemove(function(e) {
-      var pos = $("#cell").offset();
-  
-      if(pos.top < e.pageY && e.pageY < pos.top + 20
-      && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
-      $("#cell").scrollTop($("#cell").scrollTop() - 5);
-  
-      if(pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height()
-      && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
-      $("#cell").scrollTop($("#cell").scrollTop() + 5);
-    });
+    items[equipItem].Cell = -2;
+    ReactDOM.render(<Inventory />, document.querySelector("#inventory"))
   } /*else {
     itemID.css("position", "relative")
     .offset($("#" + items[equipItem].Cell).offset());
@@ -426,16 +508,8 @@ function ItemUse(response) {
 
 function push_cell(drag, drop) {
   if(check_cells($(drop).attr("id"), drag)) {
-
     if(items[Number($(drag).attr("id").substr(5))].Cell == -2) {
       let itemID = $(drag).attr("id").substr(5);
-
-      $(drag).draggable("destroy")
-      .remove();
-
-      drag = CreateItem("#items", itemID, items[itemID].ID);
-      drag.css("width", items[itemID].Size.x * size_cell + items[itemID].Size.x - 1)
-      .css("height", items[itemID].Size.y * size_cell + items[itemID].Size.y - 1);
 
       mp.trigger("client.item.use", JSON.stringify(items[itemID]));
     }
@@ -447,11 +521,11 @@ function push_cell(drag, drop) {
       for(var k = 0; k < items[Number($(drag).attr("id").substr(5))].Size.y; k++) {
         
         cells[Number($(drop).attr("id")) + i + k * size_x] = true;
-        items[Number($(drag).attr("id").substr(5))].Cell = Number($(drop).attr("id"));
       }
     }
-    cell = true;
-    //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+    items[Number($(drag).attr("id").substr(5))].Cell = Number($(drop).attr("id"));
+    ReactDOM.render(<Inventory />, document.querySelector("#inventory"))
+    mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
   }
   else {
     $(drag).css("position", "relative")
@@ -463,6 +537,7 @@ function push_cell(drag, drop) {
       }
     }
   }
+  cell = true;
 }
 
 function check_cells(id, drag) {
@@ -487,38 +562,6 @@ function add_item(x, y, type, count, stack, szcell = -1, data="") {
   }
 
   if(szcell == -2) {
-    $("#" + type).html("<div id='item-" + item + "'><img src='img/items/" + type + ".png' width='100%'></div>");
-    $("#item-" + item).draggable({
-      start: function(event, ui){
-        $(this).addClass("obj")
-          .css("width", x * size_cell + x - 1)
-          .css("height", y * size_cell + x - 1);
-      }
-    })
-    .mousedown(function() {
-      var pos = $(this).offset();
-      $(this).css("position", "absolute");
-      $(this).offset(pos);
-    })
-    .mouseup(function() {
-      if(!cell) {
-        var pos = $(this).offset();
-        $(this).css("position", "relative");
-        $(this).offset(pos);
-      }
-    })
-    .mousemove(function(e) {
-      var pos = $("#cell").offset();
-  
-      if(pos.top < e.pageY && e.pageY < pos.top + 20
-      && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
-      $("#cell").scrollTop($("#cell").scrollTop() - 5);
-  
-      if(pos.top + $("#cell").height() - 20 < e.pageY && e.pageY < pos.top + $("#cell").height()
-      && pos.left < e.pageX && e.pageX < pos.left + $("#cell").width())
-      $("#cell").scrollTop($("#cell").scrollTop() + 5);
-    });
-
     items[item] = new Item(type, szcell, x, y, count, stack, data);
     item++;
   } else {
@@ -541,7 +584,9 @@ function add_item(x, y, type, count, stack, szcell = -1, data="") {
       item++;
     }
   }
-  //mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
+  if(open)
+  ReactDOM.render(<Inventory />, document.querySelector("#inventory"))
+  mp.trigger("client.inventory.update", JSON.stringify(items), JSON.stringify(cells));
 }
 
 function get_freecell(x, y) {
@@ -566,11 +611,12 @@ function get_freecell(x, y) {
   return -1;
 }
 
-function OpenInventory() {
-  $('#inventory').css('display', 'block');
-  for(var i = 0; i < items.length; i++) {
-    if($("#item-" + i).length && items[i].Cell != -2) {
-      $("#item-" + i).offset($("#" + items[i].Cell).offset());
-    }
+function OpenCloseInventory() {
+  if(!open) {
+    ReactDOM.render(<Inventory />, document.querySelector("#inventory"));
+    open = true
+  } else {
+    ReactDOM.unmountComponentAtNode(document.querySelector("#inventory"));
+    open = false
   }
 }
